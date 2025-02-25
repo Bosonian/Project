@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GFAP Blutungsrisiko-Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        input, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GFAP Blutungsrisiko-Check</h1>
+        <p>Geben Sie den GFAP-Wert und das Alter ein, um die Blutungswahrscheinlichkeit zu überprüfen.</p>
+        <form id="gfapForm">
+            <input type="number" id="gfap" placeholder="GFAP-Wert eingeben (pg/mL)" required><br>
+            <input type="number" id="age" placeholder="Alter eingeben (Jahre)" required><br>
+            <button type="button" onclick="checkBleedingRisk()">Risiko prüfen</button>
+        </form>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function checkBleedingRisk() {
+            const gfap = parseFloat(document.getElementById('gfap').value);
+            const age = parseInt(document.getElementById('age').value);
+            const resultDiv = document.getElementById('result');
+
+            if (isNaN(gfap) || isNaN(age)) {
+                resultDiv.innerHTML = "Bitte geben Sie gültige Werte für GFAP und Alter ein.";
+                return;
+            }
+
+            let riskMessage = "";
+
+            if (gfap > 300 && age > 50) {
+                riskMessage = "Hohe Wahrscheinlichkeit einer Blutung. Dringende Abklärung empfohlen.";
+            } else if (gfap > 200 && age > 40) {
+                riskMessage = "Moderates Risiko einer Blutung. Klinische Korrelation ratsam.";
+            } else {
+                riskMessage = "Niedrige Wahrscheinlichkeit einer Blutung. Überwachung und Nachsorge empfohlen.";
+            }
+
+            resultDiv.innerHTML = `Ergebnis: ${riskMessage}`;
+        }
+    </script>
+</body>
+</html>
