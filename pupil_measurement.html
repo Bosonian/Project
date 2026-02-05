@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pupil Measurement Tool - Emergency Department</title>
+    <meta name="theme-color" content="#e94560">
+    <meta name="description" content="Emergency Department pupil size comparison tool for anisocoria assessment">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PupilCheck">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
     <style>
         :root {
             --bg: #1a1a2e;
@@ -1764,7 +1772,7 @@ function drawResultThumbnail(canvasId, eyeData) {
 }
 
 // ============================================================
-// INITIALIZATION
+// INITIALIZATION & PWA
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     // Check for camera support
@@ -1775,6 +1783,13 @@ document.addEventListener('DOMContentLoaded', () => {
         warning.innerHTML = '<strong>Warning:</strong> Camera access is not supported in this browser. ' +
             'Please use a modern mobile browser (Chrome, Safari, Firefox) with HTTPS.';
         welcomeScreen.insertBefore(warning, welcomeScreen.querySelector('.btn'));
+    }
+
+    // Register service worker for PWA / offline support
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.log('SW registration failed:', err));
     }
 });
 </script>
