@@ -1,7 +1,7 @@
 {
-  "name": "Pupil Measurement Tool",
+  "name": "PupilCheck - AI Anisocoria Assessment",
   "short_name": "PupilCheck",
-  "description": "Emergency Department pupil size comparison tool for anisocoria assessment",
+  "description": "AI-powered clinical pupil assessment tool for anisocoria detection. Uses computer vision and machine learning to measure pupil size and reactivity at the bedside.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -22,5 +22,7 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["medical", "health"]
+  "categories": ["medical", "health"],
+  "lang": "en",
+  "dir": "ltr"
 }

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PupilCheck - Measurement</title>
+  <meta name="theme-color" content="#e94560">
+  <meta name="description" content="PupilCheck pupil measurement - capture, detect, and compare pupil sizes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PupilCheck">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/measure.css">
+</head>
+<body>
+
+  <header class="header">
+    <h1>PupilCheck</h1>
+    <div class="subtitle" data-i18n="tagline">Clinical Pupil Assessment Tool</div>
+  </header>
+
+  <!-- Processing Overlay -->
+  <div class="processing-overlay" id="processingOverlay" role="status" aria-live="polite">
+    <div class="spinner"></div>
+    <div id="processingText" style="color:var(--text-muted);font-size:14px;">Detecting pupil...</div>
+  </div>
+
+  <!-- ================================================================
+       Screen 1: Welcome / Instructions
+       ================================================================ -->
+  <div class="screen active" id="screenWelcome">
+    <div class="welcome-icon" aria-hidden="true">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eye icon">
+        <ellipse cx="32" cy="32" rx="28" ry="16" stroke="var(--primary-light)" stroke-width="2.5" fill="none"/>
+        <circle cx="32" cy="32" r="12" stroke="var(--primary)" stroke-width="2" fill="rgba(233,69,96,0.12)"/>
+        <circle cx="32" cy="32" r="5" fill="var(--primary)"/>
+      </svg>
+    </div>
+
+    <h2 class="welcome-title" data-i18n="hub.newMeasurement">Pupil Size Comparison</h2>
+    <p class="welcome-desc">
+      Compare left and right pupil sizes to detect anisocoria.
+      Uses the patient's own iris as an internal reference for
+      distance-independent, ratio-based comparison.
+    </p>
+
+    <div class="instructions">
+      <h3>How to Use</h3>
+      <ol>
+        <li>Photograph the left eye up close (entire iris visible)</li>
+        <li>Adjust the auto-detected pupil and iris circles</li>
+        <li>Repeat for the right eye</li>
+        <li>Review side-by-side comparison and clinical assessment</li>
+      </ol>
+    </div>
+
+    <div class="tip-box">
+      <strong>Clinical Tip:</strong> Hold the phone 10-15 cm from the eye.
+      Ensure the entire iris is visible in the frame.
+      The iris is used as an internal ruler, so exact camera distance does not matter.
+      Use the torch for standardized lighting and reactivity testing.
+    </div>
+
+    <div class="mode-toggle" role="group" aria-label="Measurement mode">
+      <button id="modeSize" class="active" type="button"
+              aria-pressed="true"
+              onclick="Measurement.setMode('size')">
+        Size Only
+        <small>Compare pupil sizes</small>
+      </button>
+      <button id="modeReactivity" type="button"
+              aria-pressed="false"
+              onclick="Measurement.setMode('reactivity')">
+        + Reactivity
+        <small>Test light response</small>
+      </button>
+    </div>
+
+    <div id="mlStatus" class="ml-status" aria-live="polite" style="display:none;text-align:center;margin:12px 0;font-size:12px;color:var(--text-muted);"></div>
+
+    <button class="btn btn-primary" type="button"
+            onclick="Measurement.startMeasurement()"
+            aria-label="Begin measurement">Begin Measurement</button>
+    <a href="index.html" class="btn btn-secondary" role="button"
+       style="text-align:center;text-decoration:none;">Back to Home</a>
+  </div>
+
+  <!-- ================================================================
+       Screen 2: Camera Capture
+       ================================================================ -->
+  <div class="screen" id="screenCamera">
+    <div class="eye-label left" id="cameraEyeLabel" aria-live="polite">Left Eye (OS)</div>
+    <div class="orientation-hint" aria-hidden="true">Rotate to portrait for best results</div>
+
+    <div class="camera-container" id="cameraContainer">
+      <video id="cameraVideo" autoplay playsinline muted
+             aria-label="Live camera feed for pupil capture"></video>
+      <div class="camera-guide" aria-hidden="true"></div>
+      <div class="camera-guide-text" aria-hidden="true">Position eye within the oval</div>
+    </div>
+
+    <div class="zoom-control" id="zoomControl" style="display:none">
+      <label for="zoomSlider" data-i18n="measure.zoom">Zoom</label>
+      <input type="range" id="zoomSlider" min="1" max="5" step="0.1" value="1"
+             oninput="Measurement.onZoomChange()"
+             aria-label="Camera zoom level">
+      <span class="zoom-value" id="zoomValue" aria-live="polite">1.0x</span>
+    </div>
+    <div class="zoom-presets" id="zoomPresets" style="display:none" role="group" aria-label="Zoom presets">
+      <button type="button" onclick="Measurement.setZoom(1)" class="active" data-zoom="1" aria-label="1x zoom">1x</button>
+      <button type="button" onclick="Measurement.setZoom(2)" data-zoom="2" aria-label="2x zoom">2x</button>
+      <button type="button" onclick="Measurement.setZoom(3)" data-zoom="3" aria-label="3x zoom">3x</button>
+      <button type="button" onclick="Measurement.setZoom(5)" data-zoom="5" aria-label="5x zoom">5x</button>
+    </div>
+
+    <div id="torchControl">
+      <button class="torch-btn" id="torchBtn" type="button"
+              onclick="Measurement.toggleTorch()"
+              aria-label="Toggle flashlight">
+        <span class="torch-icon" id="torchIcon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
+        <span id="torchLabel">Torch OFF</span>
+      </button>
+    </div>
+
+    <div id="captureInstruction" style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:10px;min-height:20px;" aria-live="polite"></div>
+
+    <div class="camera-controls">
+      <button class="btn btn-secondary" type="button"
+              onclick="Measurement.switchCamera()"
+              aria-label="Switch between front and rear camera">
+        <span aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </span>
+        Flip Camera
+      </button>
+      <button class="btn btn-primary" id="captureBtn" type="button"
+              onclick="Measurement.captureImage()"
+              aria-label="Capture photo of the eye">
+        Capture
+      </button>
+    </div>
+
+    <button class="btn btn-secondary" type="button"
+            onclick="Measurement.goBack()"
+            data-i18n="measure.back"
+            aria-label="Go back to welcome screen">Back</button>
+  </div>
+
+  <!-- ================================================================
+       Screen 3: Measurement / Adjustment
+       ================================================================ -->
+  <div class="screen" id="screenMeasure">
+    <div class="eye-label left" id="measureEyeLabel" aria-live="polite">Left Eye (OS)</div>
+
+    <div class="measurement-container" id="measurementContainer"
+         role="application" aria-label="Drag to adjust pupil and iris circles">
+      <canvas id="measureCanvas" aria-label="Measurement canvas showing detected pupil and iris circles"></canvas>
+    </div>
+
+    <div class="circle-toggle" role="group" aria-label="Select circle to adjust">
+      <button id="togglePupil" class="active" type="button"
+              onclick="Measurement.selectCircle('pupil')"
+              aria-pressed="true"
+              data-i18n="measure.pupilInner">Pupil (inner)</button>
+      <button id="toggleIris" type="button"
+              onclick="Measurement.selectCircle('iris')"
+              aria-pressed="false"
+              data-i18n="measure.irisOuter">Iris (outer)</button>
+    </div>
+
+    <div class="slider-group" role="group" aria-label="Circle position and size controls">
+      <label for="sliderX" data-i18n="measure.circleX">Circle X Position <span id="sliderXValue">-</span></label>
+      <input type="range" id="sliderX" min="0" max="500"
+             oninput="Measurement.onSliderChange()"
+             aria-label="Horizontal position">
+
+      <label for="sliderY" data-i18n="measure.circleY">Circle Y Position <span id="sliderYValue">-</span></label>
+      <input type="range" id="sliderY" min="0" max="500"
+             oninput="Measurement.onSliderChange()"
+             aria-label="Vertical position">
+
+      <label for="sliderR" data-i18n="measure.circleRadius">Circle Radius <span id="sliderRValue">-</span></label>
+      <input type="range" id="sliderR" min="5" max="250"
+             oninput="Measurement.onSliderChange()"
+             aria-label="Circle radius">
+    </div>
+
+    <div class="measurement-info" id="measurementLive" aria-live="polite">
+      <div class="row">
+        <span class="label" data-i18n="measure.pupilIrisRatio">Pupil/Iris ratio</span>
+        <span class="value" id="liveRatio" style="font-size:16px">-</span>
+      </div>
+      <div class="row">
+        <span class="label">Pupil diameter (px)</span>
+        <span class="value" id="livePupilPx">-</span>
+      </div>
+      <div class="row">
+        <span class="label">Iris diameter (px)</span>
+        <span class="value" id="liveIrisPx">-</span>
+      </div>
+      <div class="row">
+        <span class="label">Est. pupil size (~11.7 mm iris)</span>
+        <span class="value" id="liveEstMm">-</span>
+      </div>
+      <div class="row" id="liveFocusRow" style="display:none">
+        <span class="label" data-i18n="measure.focusDistance">Focus distance</span>
+        <span class="value" id="liveFocusDist">-</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" type="button"
+              onclick="Measurement.retakePhoto()"
+              data-i18n="measure.retake"
+              aria-label="Retake the photo">Retake</button>
+      <button class="btn btn-success" type="button"
+              onclick="Measurement.confirmMeasurement()"
+              data-i18n="measure.confirm"
+              aria-label="Confirm this measurement">Confirm</button>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       Screen 4: Results
+       ================================================================ -->
+  <div class="screen" id="screenResults">
+    <div class="assessment-box normal" id="assessmentBox" role="alert" aria-live="assertive">
+      <div class="assessment-title" id="assessmentTitle">-</div>
+      <div class="assessment-detail" id="assessmentDetail">-</div>
+    </div>
+
+    <div class="diff-display">
+      <div class="diff-value" id="diffValue" aria-label="Ratio difference">-</div>
+      <div class="diff-label" id="diffLabel">Pupil/Iris ratio difference</div>
+    </div>
+
+    <div class="comparison" id="comparisonCards">
+      <div class="eye-card left">
+        <div class="eye-card-header">Left Eye (OS)</div>
+        <canvas id="resultCanvasLeft" width="200" height="200"
+                aria-label="Left eye result thumbnail"></canvas>
+        <div class="eye-card-data">
+          <div class="big-number" id="resultLeftRatio">- <span class="unit">ratio</span></div>
+          <div style="text-align:center;font-size:12px;color:var(--text-muted)" id="resultLeftMm">-</div>
+        </div>
+      </div>
+      <div class="eye-card right">
+        <div class="eye-card-header">Right Eye (OD)</div>
+        <canvas id="resultCanvasRight" width="200" height="200"
+                aria-label="Right eye result thumbnail"></canvas>
+        <div class="eye-card-data">
+          <div class="big-number" id="resultRightRatio">- <span class="unit">ratio</span></div>
+          <div style="text-align:center;font-size:12px;color:var(--text-muted)" id="resultRightMm">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reactivity results (shown only in reactivity mode) -->
+    <div id="reactivitySection" style="display:none">
+      <div class="reactivity-card">
+        <h4>Pupil Reactivity to Light</h4>
+        <div id="reactivityData" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="clinical-notes">
+      <h3 data-i18n="results.clinicalConsiderations">Clinical Considerations</h3>
+      <ul id="clinicalNotes" aria-label="Clinical notes">
+        <li>Normal physiological anisocoria: up to 1.0 mm difference</li>
+        <li>Pathological anisocoria: typically &gt; 1.0 mm, especially if new</li>
+      </ul>
+    </div>
+
+    <div class="disclaimer">
+      <strong>Disclaimer:</strong> This tool provides ratio-based pupil comparison for clinical screening purposes only.
+      It is not a certified medical device. Accuracy depends on image quality, lighting, and correct circle placement.
+      Always correlate with full clinical assessment. The pupil-to-iris ratio comparison is distance-independent.
+      Approximate mm values use 11.7 mm average iris diameter (individual range ~10.2-13.0 mm).
+      Where supported, camera focus distance is used as a consistency check between captures.
+    </div>
+
+    <div class="results-actions">
+      <button class="btn btn-primary" type="button"
+              onclick="Measurement.saveToPatient()"
+              aria-label="Save measurement to a patient record">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save to Patient
+      </button>
+      <button class="btn btn-secondary" type="button"
+              onclick="Measurement.generateReport()"
+              aria-label="Generate a printable report"
+              data-i18n="report.generateReport">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Generate Report
+      </button>
+      <button class="btn btn-success" type="button"
+              onclick="Measurement.startOver()"
+              data-i18n="results.newMeasurement"
+              aria-label="Start a new measurement">New Measurement</button>
+      <div class="btn-row">
+        <button class="btn btn-secondary" type="button"
+                onclick="Measurement.remeasureEye('left')"
+                data-i18n="results.remeasureLeft"
+                aria-label="Remeasure left eye">Remeasure Left</button>
+        <button class="btn btn-secondary" type="button"
+                onclick="Measurement.remeasureEye('right')"
+                data-i18n="results.remeasureRight"
+                aria-label="Remeasure right eye">Remeasure Right</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       Save Modal
+       ================================================================ -->
+  <div class="modal" id="saveModal" role="dialog" aria-modal="true" aria-label="Save measurement to patient">
+    <div class="modal-backdrop" onclick="Measurement.closeSaveModal()"></div>
+    <div class="modal-content">
+      <h2>Save Measurement</h2>
+      <p>Select an existing patient or create a new one.</p>
+
+      <div id="savePatientList" class="save-patient-list" role="listbox" aria-label="Select patient"></div>
+
+      <div class="save-new-patient">
+        <label for="saveNewPatientName" style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">
+          Or create new patient:
+        </label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="saveNewPatientName"
+                 placeholder="Patient name or ID"
+                 style="flex:1;padding:10px 12px;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:14px;"
+                 aria-label="New patient name">
+          <button class="btn btn-primary btn-sm" type="button"
+                  onclick="Measurement.saveToNewPatient()"
+                  style="margin-bottom:0;"
+                  aria-label="Create new patient and save">Create</button>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <button class="btn btn-secondary" type="button"
+                onclick="Measurement.closeSaveModal()"
+                data-i18n="general.cancel"
+                aria-label="Cancel saving">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Modules -->
+  <script src="js/i18n.js"></script>
+  <script src="js/patient-store.js"></script>
+  <script src="js/detection-classical.js"></script>
+  <script src="js/detection-ml.js"></script>
+  <script src="js/detection-cloud.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/measurement.js"></script>
+</body>
+</html>

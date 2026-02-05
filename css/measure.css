@@ -1,0 +1,198 @@
+/* ==========================================================================
+   PupilCheck v2.0 - Measurement Page Styles
+   measure.css
+
+   Supplements components.css with measurement-flow-specific styles.
+   All base component styles (buttons, cards, assessment, etc.) live
+   in components.css -- this file covers only layout, modal, and
+   results-action-specific overrides.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ML Status Indicator (Welcome screen)
+   -------------------------------------------------------------------------- */
+
+.ml-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    min-height: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Results Actions Layout
+   -------------------------------------------------------------------------- */
+
+.results-actions {
+    margin-top: 8px;
+}
+
+.results-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.results-actions .btn svg {
+    flex-shrink: 0;
+}
+
+.results-actions .btn-row {
+    margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Save Modal - Patient List & New Patient
+   -------------------------------------------------------------------------- */
+
+.save-patient-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+}
+
+.save-patient-list:empty {
+    display: none;
+}
+
+.save-patient-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    font-size: 14px;
+    min-height: 44px;
+}
+
+.save-patient-item:last-child {
+    border-bottom: none;
+}
+
+.save-patient-item:hover,
+.save-patient-item:focus-visible {
+    background: rgba(233, 69, 96, 0.08);
+}
+
+.save-patient-item:focus-visible {
+    outline: none;
+    box-shadow: inset var(--focus-ring);
+}
+
+.save-patient-item .patient-label {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.save-patient-item .patient-count {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.save-new-patient {
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.save-new-patient input:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   4. Front-Camera Mirror Effect
+   -------------------------------------------------------------------------- */
+
+video.mirrored {
+    transform: scaleX(-1);
+}
+
+/* --------------------------------------------------------------------------
+   5. Focus-Visible Overrides for Canvas Interaction
+   -------------------------------------------------------------------------- */
+
+.measurement-container:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--radius);
+}
+
+/* --------------------------------------------------------------------------
+   6. RAPD Alert Box (within reactivity results)
+   -------------------------------------------------------------------------- */
+
+.rapd-alert {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: rgba(233, 69, 96, 0.15);
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.rapd-alert strong {
+    color: var(--danger);
+}
+
+/* --------------------------------------------------------------------------
+   7. Reactivity Eye Header within Data
+   -------------------------------------------------------------------------- */
+
+.reactivity-eye-header {
+    margin-bottom: 8px;
+    margin-top: 0;
+}
+
+.reactivity-eye-header + .reactivity-eye-header {
+    margin-top: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   8. Small-Screen Responsive Adjustments
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 360px) {
+    .results-actions .btn-row {
+        flex-direction: column;
+    }
+
+    .save-patient-list {
+        max-height: 150px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   9. Print Overrides for Results Screen
+   -------------------------------------------------------------------------- */
+
+@media print {
+    .results-actions,
+    .modal,
+    .processing-overlay {
+        display: none !important;
+    }
+
+    .screen {
+        display: block !important;
+        max-width: 100%;
+        animation: none;
+    }
+
+    #screenWelcome,
+    #screenCamera,
+    #screenMeasure {
+        display: none !important;
+    }
+
+    .disclaimer {
+        break-inside: avoid;
+    }
+}

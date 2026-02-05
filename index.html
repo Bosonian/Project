@@ -1,1797 +1,481 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pupil Measurement Tool - Emergency Department</title>
-    <meta name="theme-color" content="#e94560">
-    <meta name="description" content="Emergency Department pupil size comparison tool for anisocoria assessment">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PupilCheck">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
-    <style>
-        :root {
-            --bg: #1a1a2e;
-            --surface: #16213e;
-            --surface2: #0f3460;
-            --primary: #e94560;
-            --primary-light: #ff6b81;
-            --text: #eee;
-            --text-muted: #aab;
-            --success: #2ed573;
-            --warning: #ffa502;
-            --danger: #ff4757;
-            --info: #70a1ff;
-            --radius: 12px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            touch-action: manipulation;
-        }
-
-        .header {
-            background: var(--surface);
-            padding: 12px 16px;
-            text-align: center;
-            border-bottom: 2px solid var(--primary);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header h1 {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .header .subtitle {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .screen {
-            display: none;
-            padding: 16px;
-            max-width: 500px;
-            margin: 0 auto;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Welcome Screen */
-        .welcome-icon {
-            font-size: 64px;
-            text-align: center;
-            margin: 24px 0 16px;
-        }
-
-        .welcome-title {
-            font-size: 24px;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
-        .welcome-desc {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 24px;
-            line-height: 1.5;
-        }
-
-        .instructions {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .instructions h3 {
-            font-size: 14px;
-            color: var(--primary-light);
-            margin-bottom: 10px;
-        }
-
-        .instructions ol {
-            padding-left: 20px;
-            font-size: 13px;
-            line-height: 1.8;
-            color: var(--text-muted);
-        }
-
-        .instructions ol li {
-            margin-bottom: 4px;
-        }
-
-        .tip-box {
-            background: rgba(233, 69, 96, 0.1);
-            border: 1px solid rgba(233, 69, 96, 0.3);
-            border-radius: var(--radius);
-            padding: 12px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .tip-box strong {
-            color: var(--primary-light);
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 10px;
-            letter-spacing: 0.3px;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-light);
-        }
-
-        .btn-secondary {
-            background: var(--surface2);
-            color: var(--text);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(15, 52, 96, 0.8);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: #1a1a2e;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: #1a1a2e;
-        }
-
-        .btn-sm {
-            padding: 10px 16px;
-            font-size: 14px;
-            display: inline-block;
-            width: auto;
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-row .btn {
-            flex: 1;
-        }
-
-        /* Camera Screen */
-        .camera-container {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 4/3;
-            background: #000;
-            border-radius: var(--radius);
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        .camera-container video,
-        .camera-container canvas {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .camera-guide {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 180px;
-            height: 120px;
-            border: 2px dashed rgba(233, 69, 96, 0.7);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .camera-guide-text {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 12px;
-            color: rgba(255,255,255,0.8);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            pointer-events: none;
-        }
-
-        .eye-label {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            padding: 8px;
-            background: var(--surface);
-            border-radius: var(--radius);
-        }
-
-        .eye-label.left { border-left: 4px solid var(--info); }
-        .eye-label.right { border-left: 4px solid var(--warning); }
-
-        .camera-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .camera-controls .btn {
-            flex: 1;
-        }
-
-        /* Measurement Screen */
-        .measurement-container {
-            position: relative;
-            width: 100%;
-            background: #000;
-            border-radius: var(--radius);
-            overflow: hidden;
-            margin-bottom: 12px;
-            touch-action: none;
-        }
-
-        .measurement-container canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
-
-        .measurement-info {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 14px;
-            margin-bottom: 12px;
-            font-size: 13px;
-        }
-
-        .measurement-info .row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .measurement-info .row:last-child {
-            border-bottom: none;
-        }
-
-        .measurement-info .label {
-            color: var(--text-muted);
-        }
-
-        .measurement-info .value {
-            font-weight: 600;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .slider-group {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-
-        .slider-group label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            margin-bottom: 6px;
-            color: var(--text-muted);
-        }
-
-        .slider-group label span {
-            color: var(--text);
-            font-weight: 600;
-        }
-
-        .slider-group input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            background: var(--bg);
-            border-radius: 4px;
-            outline: none;
-            margin-bottom: 10px;
-        }
-
-        .slider-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 28px;
-            height: 28px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .slider-group input[type="range"]::-moz-range-thumb {
-            width: 28px;
-            height: 28px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-        }
-
-        .circle-toggle {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .circle-toggle button {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid transparent;
-            border-radius: var(--radius);
-            background: var(--surface);
-            color: var(--text-muted);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .circle-toggle button.active {
-            border-color: var(--primary);
-            color: var(--text);
-            background: rgba(233, 69, 96, 0.15);
-        }
-
-        /* Results Screen */
-        .comparison {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .comparison .eye-card {
-            flex: 1;
-            background: var(--surface);
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        .eye-card .eye-card-header {
-            padding: 8px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .eye-card.left .eye-card-header {
-            background: rgba(112, 161, 255, 0.2);
-            color: var(--info);
-        }
-
-        .eye-card.right .eye-card-header {
-            background: rgba(255, 165, 2, 0.2);
-            color: var(--warning);
-        }
-
-        .eye-card canvas {
-            width: 100%;
-            display: block;
-        }
-
-        .eye-card .eye-card-data {
-            padding: 10px;
-            font-size: 12px;
-        }
-
-        .eye-card .eye-card-data .big-number {
-            font-size: 28px;
-            font-weight: 700;
-            text-align: center;
-            margin: 4px 0;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .eye-card .eye-card-data .unit {
-            font-size: 14px;
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
-        .assessment-box {
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .assessment-box.normal {
-            background: rgba(46, 213, 115, 0.15);
-            border: 1px solid rgba(46, 213, 115, 0.4);
-        }
-
-        .assessment-box.mild {
-            background: rgba(255, 165, 2, 0.15);
-            border: 1px solid rgba(255, 165, 2, 0.4);
-        }
-
-        .assessment-box.significant {
-            background: rgba(255, 71, 87, 0.15);
-            border: 1px solid rgba(255, 71, 87, 0.4);
-        }
-
-        .assessment-box .assessment-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .assessment-box.normal .assessment-title { color: var(--success); }
-        .assessment-box.mild .assessment-title { color: var(--warning); }
-        .assessment-box.significant .assessment-title { color: var(--danger); }
-
-        .assessment-box .assessment-detail {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .diff-display {
-            text-align: center;
-            padding: 12px;
-            background: var(--surface);
-            border-radius: var(--radius);
-            margin-bottom: 16px;
-        }
-
-        .diff-display .diff-value {
-            font-size: 36px;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .diff-display .diff-label {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .clinical-notes {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .clinical-notes h3 {
-            font-size: 14px;
-            color: var(--primary-light);
-            margin-bottom: 10px;
-        }
-
-        .clinical-notes ul {
-            padding-left: 18px;
-            font-size: 12px;
-            line-height: 1.8;
-            color: var(--text-muted);
-        }
-
-        .disclaimer {
-            background: rgba(255, 165, 2, 0.1);
-            border: 1px solid rgba(255, 165, 2, 0.3);
-            border-radius: var(--radius);
-            padding: 12px;
-            font-size: 11px;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-
-        .disclaimer strong {
-            color: var(--warning);
-        }
-
-        /* Focus distance badge */
-        .focus-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            background: rgba(112, 161, 255, 0.15);
-            border: 1px solid rgba(112, 161, 255, 0.3);
-            border-radius: 20px;
-            font-size: 11px;
-            color: var(--info);
-            margin-top: 4px;
-        }
-
-        /* Loading/processing overlay */
-        .processing-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(26, 26, 46, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            flex-direction: column;
-        }
-
-        .processing-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive */
-        @media (max-width: 360px) {
-            .comparison { flex-direction: column; }
-            .eye-card .eye-card-data .big-number { font-size: 24px; }
-        }
-
-        /* Print styles */
-        @media print {
-            body { background: white; color: black; }
-            .header { border-bottom-color: #333; }
-            .btn { display: none; }
-            .screen { max-width: 100%; }
-        }
-
-        /* Landscape warning for camera */
-        .orientation-hint {
-            display: none;
-            text-align: center;
-            padding: 8px;
-            background: rgba(255, 165, 2, 0.15);
-            border-radius: var(--radius);
-            font-size: 12px;
-            color: var(--warning);
-            margin-bottom: 10px;
-        }
-
-        @media (orientation: landscape) {
-            .orientation-hint { display: block; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PupilCheck - AI Anisocoria Assessment</title>
+  <meta name="theme-color" content="#e94560">
+  <meta name="description" content="AI-powered pupil assessment tool for clinical anisocoria detection">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PupilCheck">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    /* Hub-page-specific layout helpers */
+    .hub-card-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .hub-card-primary {
+      border-color: rgba(233, 69, 96, 0.35);
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(233, 69, 96, 0.08) 100%);
+    }
+    .hub-card-primary:hover {
+      border-color: var(--primary);
+    }
+    .mode-card.active {
+      border-color: var(--primary);
+      color: var(--text);
+      background: rgba(233, 69, 96, 0.1);
+    }
+    .ml-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      min-height: 20px;
+    }
+    .last-measurement-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    /* Modal overlay using inline display toggling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 300;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal {
+      position: relative;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      max-width: 420px;
+      width: 100%;
+      box-shadow: var(--shadow-md);
+      animation: fadeIn 0.25s ease;
+      max-height: 85vh;
+      overflow-y: auto;
+      display: block;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background var(--transition-fast), color var(--transition-fast);
+      line-height: 1;
+    }
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+    .modal-close:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    .modal-body {
+      padding: 16px 20px 20px;
+    }
+    .settings-select {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      width: 100%;
+      font-size: 14px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .settings-select:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    .settings-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+    }
+    /* High contrast class (toggled via JS) */
+    .high-contrast {
+      --bg: #000000;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --surface-elevated: #1a1a1a;
+      --text: #ffffff;
+      --text-muted: #cccccc;
+      --primary: #ff5577;
+      --primary-light: #ff8899;
+      --success: #44ff88;
+      --warning: #ffcc00;
+      --danger: #ff4444;
+      --info: #88bbff;
+      --border-subtle: rgba(255, 255, 255, 0.25);
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>Pupil Measurement Tool</h1>
-    <div class="subtitle">Emergency Department - Anisocoria Assessment</div>
-</div>
+  <!-- ================================================================
+       HEADER
+       ================================================================ -->
+  <header class="header" role="banner">
+    <h1>PupilCheck</h1>
+    <div class="subtitle" data-i18n="tagline">Clinical Pupil Assessment Tool</div>
+  </header>
 
-<!-- Processing Overlay -->
-<div class="processing-overlay" id="processingOverlay">
-    <div class="spinner"></div>
-    <div style="color: var(--text-muted); font-size: 14px;">Detecting pupil...</div>
-</div>
+  <!-- ================================================================
+       MAIN CONTENT
+       ================================================================ -->
+  <main class="screen active" role="main" aria-label="PupilCheck Hub">
 
-<!-- Screen 1: Welcome -->
-<div class="screen active" id="screenWelcome">
-    <div class="welcome-icon">&#128065;</div>
-    <div class="welcome-title">Pupil Size Comparison</div>
-    <div class="welcome-desc">
-        Compare left and right pupil sizes to detect anisocoria.
-        Uses the patient's own iris as an internal reference for
-        distance-independent, ratio-based comparison.
+    <!-- App Branding -->
+    <div style="text-align:center;margin:24px 0 8px">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+        <ellipse cx="32" cy="32" rx="28" ry="20" stroke="var(--primary)" stroke-width="2.5" fill="none"/>
+        <circle cx="32" cy="32" r="12" stroke="var(--info)" stroke-width="2" fill="rgba(112,161,255,0.12)"/>
+        <circle cx="32" cy="32" r="5.5" fill="var(--text)"/>
+        <circle cx="34" cy="30" r="1.8" fill="var(--bg)"/>
+      </svg>
+    </div>
+    <h2 class="welcome-title">PupilCheck v2.0</h2>
+    <p class="welcome-desc" data-i18n="hub.tagline">AI-powered clinical pupil assessment for anisocoria detection</p>
+
+    <!-- AI Status Indicator -->
+    <div class="ml-status" id="mlStatus" aria-live="polite">
+      <span class="status-dot gray" aria-hidden="true"></span>
+      <span data-i18n="status.initializing">Initializing...</span>
     </div>
 
-    <div class="instructions">
-        <h3>How to Use</h3>
-        <ol>
-            <li>Photograph the left eye up close (entire iris visible)</li>
-            <li>Adjust the auto-detected pupil and iris circles</li>
-            <li>Repeat for the right eye</li>
-            <li>Review side-by-side comparison and clinical assessment</li>
-        </ol>
+    <!-- New Measurement Card (Primary Action) -->
+    <a href="measure.html" class="hub-card hub-card-primary" aria-label="Start new measurement">
+      <div class="hub-card-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+      <div class="hub-card-content">
+        <div class="hub-card-title" data-i18n="hub.newMeasurement">New Measurement</div>
+        <div class="hub-card-desc" data-i18n="hub.newMeasurementDesc">Capture and analyze pupil size and reactivity</div>
+      </div>
+      <div class="hub-card-arrow" aria-hidden="true">&#8594;</div>
+    </a>
+
+    <!-- Patient History Card -->
+    <a href="history.html" class="hub-card" aria-label="View patient history">
+      <div class="hub-card-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20V10"/>
+          <path d="M18 20V4"/>
+          <path d="M6 20v-4"/>
+        </svg>
+      </div>
+      <div class="hub-card-content">
+        <div class="hub-card-title" data-i18n="hub.history">History</div>
+        <div class="hub-card-desc" data-i18n="hub.historyDesc">View past measurements and trends</div>
+      </div>
+      <span class="badge" id="patientBadge" style="display:none" aria-label="Patient count">0</span>
+      <div class="hub-card-arrow" aria-hidden="true">&#8594;</div>
+    </a>
+
+    <!-- Last Measurement Quick View -->
+    <div class="last-measurement-card" id="lastMeasurement" style="display:none" aria-label="Most recent measurement">
+      <!-- Populated dynamically by updateLastMeasurement() -->
     </div>
 
-    <div class="tip-box">
-        <strong>Clinical Tip:</strong> Hold the phone 10-15 cm from the eye.
-        Ensure the entire iris is visible in the frame.
-        The iris is used as an internal ruler, so exact camera distance does not matter.
-        Works in both bright and dim lighting.
+    <!-- Mode Selection -->
+    <div style="display:flex;gap:12px;margin-bottom:16px" role="radiogroup" aria-label="Measurement mode">
+      <div class="mode-card active" id="modeSizeCard" onclick="selectMode('size')" role="radio" aria-checked="true" tabindex="0" aria-label="Size only mode">
+        <div class="mode-card-title" data-i18n="hub.sizeOnly">Size Only</div>
+        <div class="mode-card-desc" data-i18n="hub.sizeOnlyDesc">Quick pupil size comparison</div>
+      </div>
+      <div class="mode-card" id="modeReactivityCard" onclick="selectMode('reactivity')" role="radio" aria-checked="false" tabindex="0" aria-label="Reactivity mode">
+        <div class="mode-card-title" data-i18n="hub.reactivity">+ Reactivity</div>
+        <div class="mode-card-desc" data-i18n="hub.reactivityDesc">Full RAPD screening</div>
+      </div>
     </div>
 
-    <button class="btn btn-primary" onclick="startMeasurement()">Begin Measurement</button>
-</div>
+    <!-- Settings Button -->
+    <button class="btn btn-secondary" onclick="openSettings()" style="margin-bottom:12px" aria-haspopup="dialog">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span data-i18n="settings.title">Settings</span>
+    </button>
 
-<!-- Screen 2: Camera Capture -->
-<div class="screen" id="screenCamera">
-    <div class="eye-label" id="cameraEyeLabel">Left Eye (OS)</div>
-    <div class="orientation-hint">Rotate to portrait for best results</div>
-
-    <div class="camera-container" id="cameraContainer">
-        <video id="cameraVideo" autoplay playsinline muted></video>
-        <div class="camera-guide"></div>
-        <div class="camera-guide-text">Position eye within the oval</div>
-    </div>
-
-    <div class="camera-controls">
-        <button class="btn btn-secondary" onclick="switchCamera()">Flip Camera</button>
-        <button class="btn btn-primary" onclick="captureImage()">Capture</button>
-    </div>
-
-    <button class="btn btn-secondary" onclick="goBack()">Back</button>
-</div>
-
-<!-- Screen 3: Measurement / Adjustment -->
-<div class="screen" id="screenMeasure">
-    <div class="eye-label" id="measureEyeLabel">Left Eye (OS)</div>
-
-    <div class="measurement-container" id="measurementContainer">
-        <canvas id="measureCanvas"></canvas>
-    </div>
-
-    <div class="circle-toggle">
-        <button id="togglePupil" class="active" onclick="selectCircle('pupil')">Pupil (inner)</button>
-        <button id="toggleIris" onclick="selectCircle('iris')">Iris (outer)</button>
-    </div>
-
-    <div class="slider-group">
-        <label>Circle X Position <span id="sliderXValue">-</span></label>
-        <input type="range" id="sliderX" min="0" max="500" oninput="onSliderChange()">
-
-        <label>Circle Y Position <span id="sliderYValue">-</span></label>
-        <input type="range" id="sliderY" min="0" max="500" oninput="onSliderChange()">
-
-        <label>Circle Radius <span id="sliderRValue">-</span></label>
-        <input type="range" id="sliderR" min="5" max="250" oninput="onSliderChange()">
-    </div>
-
-    <div class="measurement-info" id="measurementLive">
-        <div class="row">
-            <span class="label">Pupil/Iris ratio</span>
-            <span class="value" id="liveRatio" style="font-size:16px">-</span>
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" style="display:none" role="dialog" aria-label="Settings" aria-modal="true">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 data-i18n="settings.title">Settings</h2>
+          <button class="modal-close" onclick="closeSettings()" aria-label="Close settings">&times;</button>
         </div>
-        <div class="row">
-            <span class="label">Pupil diameter (px)</span>
-            <span class="value" id="livePupilPx">-</span>
+        <div class="modal-body">
+          <!-- Language -->
+          <div class="slider-group">
+            <label for="langSelect" data-i18n="settings.language">Language</label>
+            <select id="langSelect" onchange="changeLanguage(this.value)" class="settings-select" aria-label="Select language">
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </div>
+          <!-- Iris Reference Diameter -->
+          <div class="slider-group">
+            <label for="irisRefSlider">
+              <span data-i18n="settings.irisRef">Iris Reference</span>
+              <span id="irisRefValue">11.7 mm</span>
+            </label>
+            <input type="range" id="irisRefSlider" min="10.0" max="13.0" step="0.1" value="11.7" oninput="updateIrisRef()" aria-label="Iris reference diameter in millimeters">
+          </div>
+          <!-- High Contrast -->
+          <div class="settings-toggle-row">
+            <label for="highContrastToggle" data-i18n="settings.highContrast">High Contrast</label>
+            <input type="checkbox" id="highContrastToggle" onchange="toggleHighContrast()" aria-label="Toggle high contrast mode">
+          </div>
         </div>
-        <div class="row">
-            <span class="label">Iris diameter (px)</span>
-            <span class="value" id="liveIrisPx">-</span>
-        </div>
-        <div class="row">
-            <span class="label">Est. pupil size (~11.7 mm iris)</span>
-            <span class="value" id="liveEstMm">-</span>
-        </div>
-        <div class="row" id="liveFocusRow" style="display:none">
-            <span class="label">Focus distance</span>
-            <span class="value" id="liveFocusDist">-</span>
-        </div>
+      </div>
     </div>
 
-    <div class="btn-row">
-        <button class="btn btn-secondary" onclick="retakePhoto()">Retake</button>
-        <button class="btn btn-success" onclick="confirmMeasurement()">Confirm</button>
-    </div>
-</div>
+    <!-- Footer -->
+    <footer class="app-footer" role="contentinfo">
+      <div class="disclaimer" data-i18n="general.disclaimer"><strong>Disclaimer:</strong> This tool is for clinical screening assistance only. It does not replace professional ophthalmological evaluation. Always correlate findings with a complete clinical assessment.</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">PupilCheck v2.0</div>
+    </footer>
 
-<!-- Screen 4: Results -->
-<div class="screen" id="screenResults">
-    <div class="assessment-box" id="assessmentBox">
-        <div class="assessment-title" id="assessmentTitle">-</div>
-        <div class="assessment-detail" id="assessmentDetail">-</div>
-    </div>
+  </main>
 
-    <div class="diff-display">
-        <div class="diff-value" id="diffValue">-</div>
-        <div class="diff-label" id="diffLabel">Ratio difference between pupils</div>
-    </div>
+  <!-- ================================================================
+       SCRIPTS
+       ================================================================ -->
+  <script src="js/i18n.js"></script>
+  <script src="js/patient-store.js"></script>
+  <script src="js/detection-ml.js"></script>
+  <script src="js/detection-cloud.js"></script>
+  <script src="js/app.js"></script>
 
-    <div class="comparison" id="comparisonCards">
-        <div class="eye-card left">
-            <div class="eye-card-header">Left Eye (OS)</div>
-            <canvas id="resultCanvasLeft" width="200" height="150"></canvas>
-            <div class="eye-card-data">
-                <div class="big-number" id="resultLeftRatio">- <span class="unit">ratio</span></div>
-                <div style="text-align:center;font-size:12px;color:var(--text-muted)" id="resultLeftMm">-</div>
-            </div>
-        </div>
-        <div class="eye-card right">
-            <div class="eye-card-header">Right Eye (OD)</div>
-            <canvas id="resultCanvasRight" width="200" height="150"></canvas>
-            <div class="eye-card-data">
-                <div class="big-number" id="resultRightRatio">- <span class="unit">ratio</span></div>
-                <div style="text-align:center;font-size:12px;color:var(--text-muted)" id="resultRightMm">-</div>
-            </div>
-        </div>
-    </div>
+  <script>
+    // ---------------------------------------------------------------
+    // Mode selection
+    // ---------------------------------------------------------------
+    let selectedMode = localStorage.getItem('pupilcheck_mode') || 'size';
 
-    <div class="clinical-notes">
-        <h3>Clinical Considerations</h3>
-        <ul id="clinicalNotes">
-            <li>Normal physiological anisocoria: up to 1.0 mm difference</li>
-            <li>Pathological anisocoria: typically &gt; 1.0 mm, especially if new</li>
-        </ul>
-    </div>
-
-    <div class="disclaimer">
-        <strong>Disclaimer:</strong> This tool provides ratio-based pupil comparison for clinical screening purposes only.
-        It is not a certified medical device. Accuracy depends on image quality, lighting, and correct circle placement.
-        Always correlate with full clinical assessment. The pupil-to-iris ratio comparison is distance-independent.
-        Approximate mm values use 11.7 mm average iris diameter (individual range ~10.2-13.0 mm).
-        Where supported, camera focus distance is used as a consistency check between captures.
-    </div>
-
-    <button class="btn btn-primary" onclick="startOver()">New Measurement</button>
-    <button class="btn btn-secondary" onclick="remeasureEye('left')">Remeasure Left Eye</button>
-    <button class="btn btn-secondary" onclick="remeasureEye('right')">Remeasure Right Eye</button>
-</div>
-
-
-<script>
-// ============================================================
-// STATE
-// ============================================================
-const state = {
-    currentEye: 'left', // 'left' or 'right'
-    irisRefMm: 11.7, // population average, for approximate mm estimates only
-    facingMode: 'environment',
-    stream: null,
-    selectedCircle: 'pupil', // 'pupil' or 'iris'
-    capturedImage: null, // ImageData
-    capturedWidth: 0,
-    capturedHeight: 0,
-    left: {
-        image: null,
-        pupil: null, // { x, y, r }
-        iris: null,  // { x, y, r }
-        pupilMm: null,
-        ratio: null,
-        focusDistance: null // meters, from camera API if available
-    },
-    right: {
-        image: null,
-        pupil: null,
-        iris: null,
-        pupilMm: null,
-        ratio: null,
-        focusDistance: null
-    }
-};
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-function startMeasurement() {
-    state.irisRefMm = 11.7; // population average, used only for approximate mm estimates
-    state.currentEye = 'left';
-    openCamera();
-}
-
-function goBack() {
-    stopCamera();
-    showScreen('screenWelcome');
-}
-
-function startOver() {
-    state.left = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
-    state.right = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
-    showScreen('screenWelcome');
-}
-
-function remeasureEye(eye) {
-    state.currentEye = eye;
-    state[eye] = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
-    openCamera();
-}
-
-// ============================================================
-// CAMERA
-// ============================================================
-async function openCamera() {
-    const label = state.currentEye === 'left' ? 'Left Eye (OS)' : 'Right Eye (OD)';
-    document.getElementById('cameraEyeLabel').textContent = label;
-    document.getElementById('cameraEyeLabel').className = 'eye-label ' + state.currentEye;
-    showScreen('screenCamera');
-
-    try {
-        if (state.stream) {
-            state.stream.getTracks().forEach(t => t.stop());
-        }
-        const constraints = {
-            video: {
-                facingMode: state.facingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 960 }
-            }
-        };
-        state.stream = await navigator.mediaDevices.getUserMedia(constraints);
-        const video = document.getElementById('cameraVideo');
-        video.srcObject = state.stream;
-        await video.play();
-    } catch (err) {
-        alert('Camera access denied or unavailable. Please allow camera permissions and try again.\n\nError: ' + err.message);
-        showScreen('screenWelcome');
-    }
-}
-
-function stopCamera() {
-    if (state.stream) {
-        state.stream.getTracks().forEach(t => t.stop());
-        state.stream = null;
-    }
-}
-
-async function switchCamera() {
-    state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
-    await openCamera();
-}
-
-function captureImage() {
-    const video = document.getElementById('cameraVideo');
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-
-    // If using front camera, mirror the image for natural orientation
-    if (state.facingMode === 'user') {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
-    ctx.drawImage(video, 0, 0);
-
-    state.capturedWidth = canvas.width;
-    state.capturedHeight = canvas.height;
-    state.capturedImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Try to read focus distance from camera track (progressive enhancement)
-    let focusDist = null;
-    try {
-        if (state.stream) {
-            const track = state.stream.getVideoTracks()[0];
-            if (track) {
-                const settings = track.getSettings();
-                if (settings.focusDistance !== undefined && settings.focusDistance > 0) {
-                    focusDist = settings.focusDistance; // in meters
-                }
-            }
-        }
-    } catch (e) {
-        // Focus distance not available on this device/browser
-    }
-    state[state.currentEye].focusDistance = focusDist;
-
-    stopCamera();
-    processAndShowMeasurement();
-}
-
-// ============================================================
-// IMAGE PROCESSING UTILITIES
-// ============================================================
-function toGrayscale(imageData) {
-    const d = imageData.data;
-    const gray = new Uint8Array(d.length / 4);
-    for (let i = 0; i < gray.length; i++) {
-        const idx = i * 4;
-        gray[i] = Math.round(0.299 * d[idx] + 0.587 * d[idx + 1] + 0.114 * d[idx + 2]);
-    }
-    return gray;
-}
-
-function gaussianBlur(gray, w, h, radius) {
-    // Separable Gaussian blur
-    const sigma = radius / 2;
-    const kernelSize = radius * 2 + 1;
-    const kernel = new Float32Array(kernelSize);
-    let sum = 0;
-    for (let i = 0; i < kernelSize; i++) {
-        const x = i - radius;
-        kernel[i] = Math.exp(-(x * x) / (2 * sigma * sigma));
-        sum += kernel[i];
-    }
-    for (let i = 0; i < kernelSize; i++) kernel[i] /= sum;
-
-    // Horizontal pass
-    const temp = new Float32Array(w * h);
-    for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-            let val = 0;
-            for (let k = 0; k < kernelSize; k++) {
-                const sx = Math.min(Math.max(x + k - radius, 0), w - 1);
-                val += gray[y * w + sx] * kernel[k];
-            }
-            temp[y * w + x] = val;
-        }
+    function selectMode(mode) {
+      selectedMode = mode;
+      localStorage.setItem('pupilcheck_mode', mode);
+      document.getElementById('modeSizeCard').classList.toggle('active', mode === 'size');
+      document.getElementById('modeReactivityCard').classList.toggle('active', mode === 'reactivity');
+      document.getElementById('modeSizeCard').setAttribute('aria-checked', mode === 'size' ? 'true' : 'false');
+      document.getElementById('modeReactivityCard').setAttribute('aria-checked', mode === 'reactivity' ? 'true' : 'false');
     }
 
-    // Vertical pass
-    const result = new Uint8Array(w * h);
-    for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-            let val = 0;
-            for (let k = 0; k < kernelSize; k++) {
-                const sy = Math.min(Math.max(y + k - radius, 0), h - 1);
-                val += temp[sy * w + x] * kernel[k];
-            }
-            result[y * w + x] = Math.round(val);
-        }
-    }
-    return result;
-}
-
-function downsample(gray, w, h, factor) {
-    const nw = Math.floor(w / factor);
-    const nh = Math.floor(h / factor);
-    const out = new Uint8Array(nw * nh);
-    for (let y = 0; y < nh; y++) {
-        for (let x = 0; x < nw; x++) {
-            let sum = 0;
-            for (let dy = 0; dy < factor; dy++) {
-                for (let dx = 0; dx < factor; dx++) {
-                    sum += gray[(y * factor + dy) * w + (x * factor + dx)];
-                }
-            }
-            out[y * nw + x] = Math.round(sum / (factor * factor));
-        }
-    }
-    return { data: out, width: nw, height: nh };
-}
-
-// ============================================================
-// PUPIL DETECTION
-// ============================================================
-function detectPupil(gray, w, h) {
-    // Strategy: find darkest region using sliding window, then refine with threshold + circle fit.
-
-    // Step 1: Blur to smooth noise
-    const blurred = gaussianBlur(gray, w, h, 5);
-
-    // Step 2: Find darkest region with sliding window
-    const winSize = Math.max(20, Math.round(Math.min(w, h) * 0.06));
-    let minAvg = 255;
-    let bestX = w / 2, bestY = h / 2;
-
-    // Search in central 70% of image
-    const margin = 0.15;
-    const x0 = Math.floor(w * margin);
-    const x1 = Math.floor(w * (1 - margin));
-    const y0 = Math.floor(h * margin);
-    const y1 = Math.floor(h * (1 - margin));
-    const step = Math.max(2, Math.floor(winSize / 4));
-
-    for (let y = y0; y < y1 - winSize; y += step) {
-        for (let x = x0; x < x1 - winSize; x += step) {
-            let sum = 0;
-            for (let dy = 0; dy < winSize; dy += 2) {
-                for (let dx = 0; dx < winSize; dx += 2) {
-                    sum += blurred[(y + dy) * w + (x + dx)];
-                }
-            }
-            const count = Math.ceil(winSize / 2) * Math.ceil(winSize / 2);
-            const avg = sum / count;
-            if (avg < minAvg) {
-                minAvg = avg;
-                bestX = x + winSize / 2;
-                bestY = y + winSize / 2;
-            }
-        }
+    // ---------------------------------------------------------------
+    // Settings modal
+    // ---------------------------------------------------------------
+    function openSettings() {
+      document.getElementById('settingsModal').style.display = 'flex';
+      // Trap focus inside modal
+      document.getElementById('settingsModal').querySelector('.modal-close').focus();
     }
 
-    // Step 3: Adaptive threshold based on the dark region
-    // Sample intensity around the best center
-    const sampleR = winSize;
-    let darkSum = 0, darkCount = 0;
-    let surroundSum = 0, surroundCount = 0;
-
-    for (let dy = -sampleR * 2; dy <= sampleR * 2; dy++) {
-        for (let dx = -sampleR * 2; dx <= sampleR * 2; dx++) {
-            const px = Math.round(bestX + dx);
-            const py = Math.round(bestY + dy);
-            if (px < 0 || px >= w || py < 0 || py >= h) continue;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const val = blurred[py * w + px];
-            if (dist <= sampleR) {
-                darkSum += val;
-                darkCount++;
-            } else if (dist <= sampleR * 2) {
-                surroundSum += val;
-                surroundCount++;
-            }
-        }
+    function closeSettings() {
+      document.getElementById('settingsModal').style.display = 'none';
     }
 
-    const darkAvg = darkCount > 0 ? darkSum / darkCount : 0;
-    const surroundAvg = surroundCount > 0 ? surroundSum / surroundCount : 128;
-    const threshold = darkAvg + (surroundAvg - darkAvg) * 0.35;
-
-    // Step 4: Flood fill from center using threshold
-    const visited = new Uint8Array(w * h);
-    const queue = [Math.round(bestX) + Math.round(bestY) * w];
-    visited[queue[0]] = 1;
-    const pixels = [];
-
-    while (queue.length > 0) {
-        const idx = queue.pop();
-        const px = idx % w;
-        const py = Math.floor(idx / w);
-
-        if (blurred[idx] > threshold) continue;
-
-        pixels.push({ x: px, y: py });
-
-        const neighbors = [
-            [px - 1, py], [px + 1, py],
-            [px, py - 1], [px, py + 1]
-        ];
-
-        for (const [nx, ny] of neighbors) {
-            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-            const nIdx = ny * w + nx;
-            if (visited[nIdx]) continue;
-            visited[nIdx] = 1;
-            if (blurred[nIdx] <= threshold) {
-                queue.push(nIdx);
-            }
-        }
-
-        // Safety: don't let the region grow too large
-        if (pixels.length > w * h * 0.15) break;
+    function changeLanguage(locale) {
+      if (typeof i18n !== 'undefined' && i18n.setLocale) {
+        i18n.setLocale(locale);
+      }
     }
 
-    if (pixels.length < 20) {
-        // Fallback: use the darkest region center with a default radius
-        return {
-            x: Math.round(bestX),
-            y: Math.round(bestY),
-            r: Math.round(Math.min(w, h) * 0.06)
-        };
+    function updateIrisRef() {
+      var val = parseFloat(document.getElementById('irisRefSlider').value);
+      document.getElementById('irisRefValue').textContent = val.toFixed(1) + ' mm';
+      if (typeof App !== 'undefined' && App.setIrisRefMm) {
+        App.setIrisRefMm(val);
+      }
     }
 
-    // Step 5: Fit circle to the detected pixels
-    return fitCircleToPixels(pixels);
-}
-
-function fitCircleToPixels(pixels) {
-    // Calculate centroid
-    let cx = 0, cy = 0;
-    for (const p of pixels) {
-        cx += p.x;
-        cy += p.y;
-    }
-    cx /= pixels.length;
-    cy /= pixels.length;
-
-    // Calculate average distance from centroid (radius estimate)
-    let totalDist = 0;
-    for (const p of pixels) {
-        totalDist += Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2);
-    }
-    const avgDist = totalDist / pixels.length;
-    // For a filled circle, average distance from center = 2/3 * radius
-    const radius = avgDist * 1.5;
-
-    return {
-        x: Math.round(cx),
-        y: Math.round(cy),
-        r: Math.round(Math.max(radius, 5))
-    };
-}
-
-// ============================================================
-// IRIS DETECTION
-// ============================================================
-function detectIris(gray, w, h, pupil) {
-    // Strategy: From pupil center, search outward radially for the
-    // iris-sclera boundary (where intensity increases significantly).
-    const blurred = gaussianBlur(gray, w, h, 3);
-
-    const cx = pupil.x;
-    const cy = pupil.y;
-    const startR = pupil.r + 5;
-    const maxR = Math.min(
-        cx, cy, w - cx, h - cy,
-        Math.round(Math.min(w, h) * 0.45)
-    );
-
-    // Sample at multiple angles and find where the gradient peaks
-    const numAngles = 72; // every 5 degrees
-    const radiusCandidates = [];
-
-    for (let ai = 0; ai < numAngles; ai++) {
-        const angle = (ai / numAngles) * 2 * Math.PI;
-        const cosA = Math.cos(angle);
-        const sinA = Math.sin(angle);
-
-        let maxGrad = 0;
-        let bestR = 0;
-        let prevVal = 0;
-
-        for (let r = startR; r < maxR; r += 1) {
-            const sx = Math.round(cx + r * cosA);
-            const sy = Math.round(cy + r * sinA);
-            if (sx < 0 || sx >= w || sy < 0 || sy >= h) break;
-
-            const val = blurred[sy * w + sx];
-            const grad = val - prevVal;
-            prevVal = val;
-
-            if (r > startR + 5 && grad > maxGrad) {
-                maxGrad = grad;
-                bestR = r;
-            }
-        }
-
-        if (bestR > startR && maxGrad > 3) {
-            radiusCandidates.push(bestR);
-        }
+    function toggleHighContrast() {
+      var checked = document.getElementById('highContrastToggle').checked;
+      if (typeof App !== 'undefined' && App.setHighContrast) {
+        App.setHighContrast(checked);
+      } else {
+        document.documentElement.classList.toggle('high-contrast', checked);
+      }
     }
 
-    if (radiusCandidates.length < 10) {
-        // Fallback: estimate iris as ~3x pupil radius (typical ratio)
-        return {
-            x: cx,
-            y: cy,
-            r: Math.round(pupil.r * 3.0)
-        };
-    }
-
-    // Use median of candidates (robust to outliers)
-    radiusCandidates.sort((a, b) => a - b);
-    const medianR = radiusCandidates[Math.floor(radiusCandidates.length / 2)];
-
-    // Filter outliers: keep only within 25% of median
-    const filtered = radiusCandidates.filter(r =>
-        r > medianR * 0.75 && r < medianR * 1.25
-    );
-
-    const finalR = filtered.length > 0
-        ? filtered.reduce((a, b) => a + b, 0) / filtered.length
-        : medianR;
-
-    return {
-        x: cx,
-        y: cy,
-        r: Math.round(Math.max(finalR, pupil.r + 10))
-    };
-}
-
-// ============================================================
-// MEASUREMENT SCREEN
-// ============================================================
-function processAndShowMeasurement() {
-    const overlay = document.getElementById('processingOverlay');
-    overlay.classList.add('active');
-
-    // Use requestAnimationFrame to let the overlay render before heavy computation
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            try {
-                doDetection();
-            } catch (e) {
-                console.error('Detection error:', e);
-                // Fallback circles
-                const w = state.capturedWidth;
-                const h = state.capturedHeight;
-                const eyeData = state[state.currentEye];
-                eyeData.pupil = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.06) };
-                eyeData.iris = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.2) };
-            }
-            overlay.classList.remove('active');
-            showMeasurementScreen();
-        }, 50);
-    });
-}
-
-function doDetection() {
-    const w = state.capturedWidth;
-    const h = state.capturedHeight;
-    const gray = toGrayscale(state.capturedImage);
-
-    // For performance, work on a downsampled version for detection
-    const scale = w > 640 ? Math.floor(w / 640) : 1;
-    let workGray, workW, workH;
-
-    if (scale > 1) {
-        const ds = downsample(gray, w, h, scale);
-        workGray = ds.data;
-        workW = ds.width;
-        workH = ds.height;
-    } else {
-        workGray = gray;
-        workW = w;
-        workH = h;
-    }
-
-    // Detect pupil
-    let pupil = detectPupil(workGray, workW, workH);
-    // Scale back up
-    pupil.x = Math.round(pupil.x * scale);
-    pupil.y = Math.round(pupil.y * scale);
-    pupil.r = Math.round(pupil.r * scale);
-
-    // Detect iris
-    let iris = detectIris(gray, w, h, pupil);
-
-    // Sanity checks
-    // Pupil should be smaller than iris
-    if (pupil.r >= iris.r * 0.95) {
-        pupil.r = Math.round(iris.r * 0.4);
-    }
-    // Iris shouldn't be too large relative to image
-    if (iris.r > Math.min(w, h) * 0.45) {
-        iris.r = Math.round(Math.min(w, h) * 0.35);
-    }
-    // Minimum pupil size
-    if (pupil.r < 5) pupil.r = Math.round(Math.min(w, h) * 0.04);
-
-    const eyeData = state[state.currentEye];
-    eyeData.pupil = pupil;
-    eyeData.iris = iris;
-    eyeData.image = state.capturedImage;
-}
-
-function showMeasurementScreen() {
-    const label = state.currentEye === 'left' ? 'Left Eye (OS)' : 'Right Eye (OD)';
-    document.getElementById('measureEyeLabel').textContent = label;
-    document.getElementById('measureEyeLabel').className = 'eye-label ' + state.currentEye;
-
-    showScreen('screenMeasure');
-    selectCircle('pupil');
-    drawMeasurement();
-    updateSliders();
-    updateLiveStats();
-}
-
-function selectCircle(which) {
-    state.selectedCircle = which;
-    document.getElementById('togglePupil').classList.toggle('active', which === 'pupil');
-    document.getElementById('toggleIris').classList.toggle('active', which === 'iris');
-    updateSliders();
-}
-
-function updateSliders() {
-    const eyeData = state[state.currentEye];
-    const circle = state.selectedCircle === 'pupil' ? eyeData.pupil : eyeData.iris;
-    if (!circle) return;
-
-    const sliderX = document.getElementById('sliderX');
-    const sliderY = document.getElementById('sliderY');
-    const sliderR = document.getElementById('sliderR');
-
-    sliderX.max = state.capturedWidth;
-    sliderY.max = state.capturedHeight;
-    sliderR.max = Math.round(Math.min(state.capturedWidth, state.capturedHeight) / 2);
-
-    sliderX.value = circle.x;
-    sliderY.value = circle.y;
-    sliderR.value = circle.r;
-
-    document.getElementById('sliderXValue').textContent = circle.x + ' px';
-    document.getElementById('sliderYValue').textContent = circle.y + ' px';
-    document.getElementById('sliderRValue').textContent = circle.r + ' px';
-}
-
-function onSliderChange() {
-    const eyeData = state[state.currentEye];
-    const circle = state.selectedCircle === 'pupil' ? eyeData.pupil : eyeData.iris;
-    if (!circle) return;
-
-    circle.x = parseInt(document.getElementById('sliderX').value);
-    circle.y = parseInt(document.getElementById('sliderY').value);
-    circle.r = parseInt(document.getElementById('sliderR').value);
-
-    document.getElementById('sliderXValue').textContent = circle.x + ' px';
-    document.getElementById('sliderYValue').textContent = circle.y + ' px';
-    document.getElementById('sliderRValue').textContent = circle.r + ' px';
-
-    drawMeasurement();
-    updateLiveStats();
-}
-
-function drawMeasurement() {
-    const canvas = document.getElementById('measureCanvas');
-    const eyeData = state[state.currentEye];
-    if (!eyeData.image) return;
-
-    const w = state.capturedWidth;
-    const h = state.capturedHeight;
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-
-    // Draw captured image
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = w;
-    tempCanvas.height = h;
-    tempCanvas.getContext('2d').putImageData(state.capturedImage, 0, 0);
-    ctx.drawImage(tempCanvas, 0, 0);
-
-    // Draw iris circle (outer)
-    if (eyeData.iris) {
-        ctx.beginPath();
-        ctx.arc(eyeData.iris.x, eyeData.iris.y, eyeData.iris.r, 0, Math.PI * 2);
-        ctx.strokeStyle = state.selectedCircle === 'iris' ? '#ffa502' : 'rgba(255, 165, 2, 0.5)';
-        ctx.lineWidth = state.selectedCircle === 'iris' ? 3 : 2;
-        ctx.setLineDash(state.selectedCircle === 'iris' ? [] : [8, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Crosshair
-        if (state.selectedCircle === 'iris') {
-            ctx.beginPath();
-            ctx.moveTo(eyeData.iris.x - 10, eyeData.iris.y);
-            ctx.lineTo(eyeData.iris.x + 10, eyeData.iris.y);
-            ctx.moveTo(eyeData.iris.x, eyeData.iris.y - 10);
-            ctx.lineTo(eyeData.iris.x, eyeData.iris.y + 10);
-            ctx.strokeStyle = '#ffa502';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-    }
-
-    // Draw pupil circle (inner)
-    if (eyeData.pupil) {
-        ctx.beginPath();
-        ctx.arc(eyeData.pupil.x, eyeData.pupil.y, eyeData.pupil.r, 0, Math.PI * 2);
-        ctx.strokeStyle = state.selectedCircle === 'pupil' ? '#e94560' : 'rgba(233, 69, 96, 0.5)';
-        ctx.lineWidth = state.selectedCircle === 'pupil' ? 3 : 2;
-        ctx.setLineDash(state.selectedCircle === 'pupil' ? [] : [8, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Fill with semi-transparent
-        ctx.beginPath();
-        ctx.arc(eyeData.pupil.x, eyeData.pupil.y, eyeData.pupil.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(233, 69, 96, 0.1)';
-        ctx.fill();
-
-        // Crosshair
-        if (state.selectedCircle === 'pupil') {
-            ctx.beginPath();
-            ctx.moveTo(eyeData.pupil.x - 10, eyeData.pupil.y);
-            ctx.lineTo(eyeData.pupil.x + 10, eyeData.pupil.y);
-            ctx.moveTo(eyeData.pupil.x, eyeData.pupil.y - 10);
-            ctx.lineTo(eyeData.pupil.x, eyeData.pupil.y + 10);
-            ctx.strokeStyle = '#e94560';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-    }
-}
-
-function updateLiveStats() {
-    const eyeData = state[state.currentEye];
-    if (!eyeData.pupil || !eyeData.iris) return;
-
-    const pupilDiaPx = eyeData.pupil.r * 2;
-    const irisDiaPx = eyeData.iris.r * 2;
-    const ratio = pupilDiaPx / irisDiaPx;
-    const estMm = ratio * state.irisRefMm;
-
-    document.getElementById('livePupilPx').textContent = pupilDiaPx + ' px';
-    document.getElementById('liveIrisPx').textContent = irisDiaPx + ' px';
-    document.getElementById('liveRatio').textContent = ratio.toFixed(3);
-    document.getElementById('liveEstMm').textContent = estMm.toFixed(1) + ' mm';
-
-    // Show focus distance if available
-    const focusRow = document.getElementById('liveFocusRow');
-    if (eyeData.focusDistance !== null) {
-        focusRow.style.display = '';
-        const cm = (eyeData.focusDistance * 100).toFixed(1);
-        document.getElementById('liveFocusDist').textContent = cm + ' cm';
-    } else {
-        focusRow.style.display = 'none';
-    }
-}
-
-function retakePhoto() {
-    state[state.currentEye] = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
-    openCamera();
-}
-
-function confirmMeasurement() {
-    const eyeData = state[state.currentEye];
-    const pupilDiaPx = eyeData.pupil.r * 2;
-    const irisDiaPx = eyeData.iris.r * 2;
-    eyeData.ratio = pupilDiaPx / irisDiaPx;
-    eyeData.pupilMm = eyeData.ratio * state.irisRefMm;
-
-    // Store a copy of the captured image for results
-    eyeData.image = state.capturedImage;
-    eyeData.imageWidth = state.capturedWidth;
-    eyeData.imageHeight = state.capturedHeight;
-
-    if (state.currentEye === 'left') {
-        // Move to right eye
-        state.currentEye = 'right';
-        openCamera();
-    } else {
-        // Both eyes measured, show results
-        showResults();
-    }
-}
-
-// ============================================================
-// TOUCH / POINTER INTERACTION ON MEASUREMENT CANVAS
-// ============================================================
-(function setupCanvasInteraction() {
-    let dragging = false;
-    let dragTarget = null; // 'pupil-move', 'pupil-resize', 'iris-move', 'iris-resize'
-    let lastPos = null;
-
-    function getCanvasCoords(e) {
-        const canvas = document.getElementById('measureCanvas');
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return {
-            x: (clientX - rect.left) * scaleX,
-            y: (clientY - rect.top) * scaleY
-        };
-    }
-
-    function hitTest(pos) {
-        const eyeData = state[state.currentEye];
-        if (!eyeData.pupil || !eyeData.iris) return null;
-
-        // Check pupil edge (resize)
-        const pDist = Math.sqrt((pos.x - eyeData.pupil.x) ** 2 + (pos.y - eyeData.pupil.y) ** 2);
-        const tolerance = Math.max(15, eyeData.pupil.r * 0.15);
-        if (Math.abs(pDist - eyeData.pupil.r) < tolerance) return 'pupil-resize';
-
-        // Check iris edge (resize)
-        const iDist = Math.sqrt((pos.x - eyeData.iris.x) ** 2 + (pos.y - eyeData.iris.y) ** 2);
-        const iTolerance = Math.max(15, eyeData.iris.r * 0.15);
-        if (Math.abs(iDist - eyeData.iris.r) < iTolerance) return 'iris-resize';
-
-        // Check pupil interior (move)
-        if (pDist < eyeData.pupil.r) return 'pupil-move';
-
-        // Check iris interior (move)
-        if (iDist < eyeData.iris.r) return 'iris-move';
-
-        return null;
-    }
-
-    function onStart(e) {
-        const pos = getCanvasCoords(e);
-        dragTarget = hitTest(pos);
-        if (dragTarget) {
-            dragging = true;
-            lastPos = pos;
-
-            // Auto-select the circle being interacted with
-            if (dragTarget.startsWith('pupil')) selectCircle('pupil');
-            else selectCircle('iris');
-
-            e.preventDefault();
-        }
-    }
-
-    function onMove(e) {
-        if (!dragging || !lastPos) return;
-        const pos = getCanvasCoords(e);
-        const dx = pos.x - lastPos.x;
-        const dy = pos.y - lastPos.y;
-        lastPos = pos;
-
-        const eyeData = state[state.currentEye];
-
-        if (dragTarget === 'pupil-move') {
-            eyeData.pupil.x = Math.round(eyeData.pupil.x + dx);
-            eyeData.pupil.y = Math.round(eyeData.pupil.y + dy);
-        } else if (dragTarget === 'iris-move') {
-            eyeData.iris.x = Math.round(eyeData.iris.x + dx);
-            eyeData.iris.y = Math.round(eyeData.iris.y + dy);
-        } else if (dragTarget === 'pupil-resize') {
-            const dist = Math.sqrt((pos.x - eyeData.pupil.x) ** 2 + (pos.y - eyeData.pupil.y) ** 2);
-            eyeData.pupil.r = Math.max(5, Math.round(dist));
-        } else if (dragTarget === 'iris-resize') {
-            const dist = Math.sqrt((pos.x - eyeData.iris.x) ** 2 + (pos.y - eyeData.iris.y) ** 2);
-            eyeData.iris.r = Math.max(10, Math.round(dist));
-        }
-
-        updateSliders();
-        drawMeasurement();
-        updateLiveStats();
-        e.preventDefault();
-    }
-
-    function onEnd() {
-        dragging = false;
-        dragTarget = null;
-        lastPos = null;
-    }
-
-    // Attach events once DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-        const container = document.getElementById('measurementContainer');
-        container.addEventListener('mousedown', onStart);
-        container.addEventListener('mousemove', onMove);
-        container.addEventListener('mouseup', onEnd);
-        container.addEventListener('mouseleave', onEnd);
-        container.addEventListener('touchstart', onStart, { passive: false });
-        container.addEventListener('touchmove', onMove, { passive: false });
-        container.addEventListener('touchend', onEnd);
-        container.addEventListener('touchcancel', onEnd);
-    });
-})();
-
-// ============================================================
-// RESULTS SCREEN
-// ============================================================
-function showResults() {
-    showScreen('screenResults');
-
-    const left = state.left;
-    const right = state.right;
-
-    // Draw result thumbnails
-    drawResultThumbnail('resultCanvasLeft', left);
-    drawResultThumbnail('resultCanvasRight', right);
-
-    // Display ratio as primary metric
-    document.getElementById('resultLeftRatio').innerHTML =
-        left.ratio.toFixed(3) + ' <span class="unit">P/I ratio</span>';
-    document.getElementById('resultRightRatio').innerHTML =
-        right.ratio.toFixed(3) + ' <span class="unit">P/I ratio</span>';
-
-    // Show estimated mm as secondary info
-    document.getElementById('resultLeftMm').textContent =
-        '~' + left.pupilMm.toFixed(1) + ' mm (est.)';
-    document.getElementById('resultRightMm').textContent =
-        '~' + right.pupilMm.toFixed(1) + ' mm (est.)';
-
-    // Calculate differences
-    const ratioDiff = Math.abs(left.ratio - right.ratio);
-    const estMmDiff = Math.abs(left.pupilMm - right.pupilMm);
-
-    // Compute percentage difference relative to the larger pupil
-    const maxRatio = Math.max(left.ratio, right.ratio);
-    const pctDiff = maxRatio > 0 ? (ratioDiff / maxRatio) * 100 : 0;
-
-    document.getElementById('diffValue').innerHTML =
-        ratioDiff.toFixed(3) + ' <span style="font-size:18px;font-weight:400">ratio</span>' +
-        '<br><span style="font-size:18px;color:var(--text-muted)">' +
-        pctDiff.toFixed(0) + '% difference (~' + estMmDiff.toFixed(1) + ' mm est.)</span>';
-    document.getElementById('diffLabel').textContent = 'Pupil/Iris ratio difference';
-
-    // Clinical assessment - use estimated mm thresholds as clinicians think in mm
-    const diff = estMmDiff;
-    const assessBox = document.getElementById('assessmentBox');
-    const assessTitle = document.getElementById('assessmentTitle');
-    const assessDetail = document.getElementById('assessmentDetail');
-
-    if (diff < 0.5) {
-        assessBox.className = 'assessment-box normal';
-        assessTitle.textContent = 'Pupils Equal';
-        assessDetail.textContent =
-            'No clinically significant anisocoria detected. Ratio difference of ' +
-            ratioDiff.toFixed(3) + ' (~' + diff.toFixed(1) + ' mm) is within normal physiological variation.';
-    } else if (diff < 1.0) {
-        assessBox.className = 'assessment-box normal';
-        assessTitle.textContent = 'Physiological Anisocoria';
-        assessDetail.textContent =
-            'Ratio difference of ' + ratioDiff.toFixed(3) + ' (~' + diff.toFixed(1) + ' mm). ' +
-            'Up to ~1.0 mm asymmetry is considered physiological anisocoria, present in ~20% of the population. ' +
-            'Correlate with clinical history and exam.';
-    } else if (diff < 2.0) {
-        assessBox.className = 'assessment-box mild';
-        assessTitle.textContent = 'Anisocoria Detected';
-        assessDetail.textContent =
-            'Ratio difference of ' + ratioDiff.toFixed(3) + ' (~' + diff.toFixed(1) + ' mm) exceeds ' +
-            'physiological range. Consider: Horner syndrome, pharmacological mydriasis, previous eye surgery, ' +
-            'third nerve palsy, or other neurological causes. Assess reactivity and urgency.';
-    } else {
-        assessBox.className = 'assessment-box significant';
-        assessTitle.textContent = 'Significant Anisocoria';
-        assessDetail.textContent =
-            'Ratio difference of ' + ratioDiff.toFixed(3) + ' (~' + diff.toFixed(1) + ' mm) is clinically significant. ' +
-            'URGENT: Rule out third nerve palsy, uncal herniation, or acute intracranial pathology. ' +
-            'Check pupil reactivity. Consider emergent neuroimaging if new onset.';
-    }
-
-    // Color the diff value
-    const diffEl = document.getElementById('diffValue');
-    if (diff < 1.0) diffEl.style.color = 'var(--success)';
-    else if (diff < 2.0) diffEl.style.color = 'var(--warning)';
-    else diffEl.style.color = 'var(--danger)';
-
-    // Clinical notes
-    const notesEl = document.getElementById('clinicalNotes');
-    const larger = left.ratio > right.ratio ? 'Left (OS)' : 'Right (OD)';
-    const smaller = left.ratio > right.ratio ? 'Right (OD)' : 'Left (OS)';
-
-    let notes = [];
-    notes.push(`Larger pupil: <strong>${larger}</strong> (ratio ${Math.max(left.ratio, right.ratio).toFixed(3)}, ~${Math.max(left.pupilMm, right.pupilMm).toFixed(1)} mm)`);
-    notes.push(`Smaller pupil: <strong>${smaller}</strong> (ratio ${Math.min(left.ratio, right.ratio).toFixed(3)}, ~${Math.min(left.pupilMm, right.pupilMm).toFixed(1)} mm)`);
-    notes.push(`Relative difference: <strong>${pctDiff.toFixed(1)}%</strong> (the larger pupil is ${pctDiff.toFixed(0)}% bigger)`);
-    notes.push('Normal pupil size: 2-4 mm (bright light) to 4-8 mm (dark)');
-    notes.push('Physiological anisocoria (up to ~1.0 mm) is present in ~20% of population');
-
-    if (diff >= 1.0) {
-        notes.push('<strong>Anisocoria workup:</strong> Check direct and consensual light reflexes');
-        notes.push('Determine if the abnormal pupil is the larger or smaller one');
-        notes.push('New-onset unilateral mydriasis + ptosis: rule out CN III palsy');
-        notes.push('Unilateral miosis + ptosis: consider Horner syndrome');
-    }
-
-    if (Math.max(left.pupilMm, right.pupilMm) > 7) {
-        notes.push('<strong>Note:</strong> Large pupil detected. Consider pharmacological cause, trauma, or CN III palsy');
-    }
-
-    if (Math.min(left.pupilMm, right.pupilMm) < 2) {
-        notes.push('<strong>Note:</strong> Very small pupil detected. Consider opioid use, Horner syndrome, or pharmacological miosis');
-    }
-
-    // Focus distance consistency check
-    if (left.focusDistance !== null && right.focusDistance !== null) {
-        const leftCm = (left.focusDistance * 100).toFixed(1);
-        const rightCm = (right.focusDistance * 100).toFixed(1);
-        notes.push(`Camera focus distance - Left: ${leftCm} cm, Right: ${rightCm} cm`);
-
-        const distDiff = Math.abs(left.focusDistance - right.focusDistance);
-        const avgDist = (left.focusDistance + right.focusDistance) / 2;
-        if (avgDist > 0 && (distDiff / avgDist) > 0.20) {
-            notes.push('<strong style="color:var(--warning)">Warning:</strong> Camera distance differed significantly between captures (' +
-                leftCm + ' vs ' + rightCm + ' cm). This does not affect the ratio-based comparison, but consider retaking for consistency.');
-        } else {
-            notes.push('Camera distances were consistent between captures (good)');
-        }
-    } else if (left.focusDistance !== null || right.focusDistance !== null) {
-        const available = left.focusDistance !== null ? 'Left' : 'Right';
-        const dist = (left.focusDistance || right.focusDistance) * 100;
-        notes.push(`Camera focus distance (${available} only): ${dist.toFixed(1)} cm`);
-    }
-
-    notesEl.innerHTML = notes.map(n => `<li>${n}</li>`).join('');
-}
-
-function drawResultThumbnail(canvasId, eyeData) {
-    const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext('2d');
-
-    if (!eyeData.image) {
-        ctx.fillStyle = '#333';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#999';
-        ctx.textAlign = 'center';
-        ctx.fillText('No image', canvas.width / 2, canvas.height / 2);
+    // ---------------------------------------------------------------
+    // Last measurement quick view
+    // ---------------------------------------------------------------
+    function updateLastMeasurement() {
+      var last = (typeof patientStore !== 'undefined') ? patientStore.getLastMeasurement() : null;
+      var el = document.getElementById('lastMeasurement');
+      if (!last) {
+        el.style.display = 'none';
         return;
+      }
+      el.style.display = 'block';
+
+      var assessClass = (typeof App !== 'undefined' && App.assessmentClass)
+        ? App.assessmentClass(last.assessment && last.assessment.diffMm ? last.assessment.diffMm : 0)
+        : 'normal';
+      var formattedDate = (typeof App !== 'undefined' && App.formatDateTime)
+        ? App.formatDateTime(last.timestamp)
+        : new Date(last.timestamp).toLocaleString();
+      var assessTitle = (last.assessment && last.assessment.title) ? last.assessment.title : '';
+      var leftRatio = (last.left && last.left.ratio != null) ? last.left.ratio.toFixed(3) : '-';
+      var rightRatio = (last.right && last.right.ratio != null) ? last.right.ratio.toFixed(3) : '-';
+      var diffStr = (last.assessment && last.assessment.diffMm)
+        ? ' | Diff: ~' + last.assessment.diffMm.toFixed(1) + ' mm'
+        : '';
+
+      el.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+          '<span style="font-size:12px;color:var(--text-muted)">' + formattedDate + '</span>' +
+          '<span class="badge badge-' + assessClass + '">' + assessTitle + '</span>' +
+        '</div>' +
+        '<div style="font-size:13px">' + (last.patientLabel || '') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">' +
+          'L: ' + leftRatio + ' | R: ' + rightRatio + diffStr +
+        '</div>';
     }
 
-    // Crop around the iris for the thumbnail
-    const srcW = eyeData.imageWidth;
-    const srcH = eyeData.imageHeight;
-    const iris = eyeData.iris;
-    const pad = iris.r * 1.3;
-
-    const sx = Math.max(0, iris.x - pad);
-    const sy = Math.max(0, iris.y - pad);
-    const sw = Math.min(pad * 2, srcW - sx);
-    const sh = Math.min(pad * 2, srcH - sy);
-
-    // Draw source image to temp canvas
-    const temp = document.createElement('canvas');
-    temp.width = srcW;
-    temp.height = srcH;
-    temp.getContext('2d').putImageData(eyeData.image, 0, 0);
-
-    // Scale to fit result canvas
-    canvas.width = 200;
-    canvas.height = 200;
-    ctx.drawImage(temp, sx, sy, sw, sh, 0, 0, 200, 200);
-
-    // Draw circles on thumbnail
-    const scaleX = 200 / sw;
-    const scaleY = 200 / sh;
-    const offsetX = (iris.x - sx) * scaleX;
-    const offsetY = (iris.y - sy) * scaleY;
-    const pOffsetX = (eyeData.pupil.x - sx) * scaleX;
-    const pOffsetY = (eyeData.pupil.y - sy) * scaleY;
-
-    // Iris circle
-    ctx.beginPath();
-    ctx.arc(offsetX, offsetY, iris.r * scaleX, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 165, 2, 0.7)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Pupil circle
-    ctx.beginPath();
-    ctx.arc(pOffsetX, pOffsetY, eyeData.pupil.r * scaleX, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(233, 69, 96, 0.9)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(pOffsetX, pOffsetY, eyeData.pupil.r * scaleX, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(233, 69, 96, 0.15)';
-    ctx.fill();
-}
-
-// ============================================================
-// INITIALIZATION & PWA
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Check for camera support
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const welcomeScreen = document.getElementById('screenWelcome');
-        const warning = document.createElement('div');
-        warning.className = 'tip-box';
-        warning.innerHTML = '<strong>Warning:</strong> Camera access is not supported in this browser. ' +
-            'Please use a modern mobile browser (Chrome, Safari, Firefox) with HTTPS.';
-        welcomeScreen.insertBefore(warning, welcomeScreen.querySelector('.btn'));
+    // ---------------------------------------------------------------
+    // Patient badge
+    // ---------------------------------------------------------------
+    function updatePatientBadge() {
+      var count = (typeof patientStore !== 'undefined') ? patientStore.getPatientCount() : 0;
+      var badge = document.getElementById('patientBadge');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
     }
 
-    // Register service worker for PWA / offline support
-    if ('serviceWorker' in navigator) {
+    // ---------------------------------------------------------------
+    // Close modal on backdrop click or Escape key
+    // ---------------------------------------------------------------
+    document.getElementById('settingsModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeSettings();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var modal = document.getElementById('settingsModal');
+        if (modal.style.display !== 'none') {
+          closeSettings();
+        }
+      }
+    });
+
+    // ---------------------------------------------------------------
+    // Keyboard support for mode cards
+    // ---------------------------------------------------------------
+    document.getElementById('modeSizeCard').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectMode('size');
+      }
+    });
+    document.getElementById('modeReactivityCard').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectMode('reactivity');
+      }
+    });
+
+    // ---------------------------------------------------------------
+    // Initialize on DOMContentLoaded
+    // ---------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Load high contrast setting
+      if (typeof patientStore !== 'undefined') {
+        var settings = patientStore.getSettings();
+        if (settings.highContrast) {
+          document.getElementById('highContrastToggle').checked = true;
+          document.documentElement.classList.add('high-contrast');
+        }
+      }
+
+      // Load iris reference setting
+      if (typeof App !== 'undefined' && App.getIrisRefMm) {
+        var irisRef = App.getIrisRefMm();
+        document.getElementById('irisRefSlider').value = irisRef;
+        document.getElementById('irisRefValue').textContent = irisRef.toFixed(1) + ' mm';
+      }
+
+      // Restore saved language
+      var savedLang = localStorage.getItem('pupilcheck_lang') || 'en';
+      document.getElementById('langSelect').value = savedLang;
+
+      // Restore mode selection
+      selectMode(selectedMode);
+
+      // Init i18n
+      if (typeof i18n !== 'undefined' && i18n.init) {
+        await i18n.init();
+      }
+
+      // Update UI elements
+      updateLastMeasurement();
+      updatePatientBadge();
+
+      // Init ML (non-blocking)
+      if (typeof App !== 'undefined' && App.initML) {
+        App.initML();
+      }
+
+      // Register service worker
+      if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW registered:', reg.scope))
-            .catch(err => console.log('SW registration failed:', err));
-    }
-});
-</script>
+          .then(function(reg) { console.log('SW registered:', reg.scope); })
+          .catch(function(err) { console.log('SW registration failed:', err); });
+      }
+    });
+  </script>
+
 </body>
 </html>

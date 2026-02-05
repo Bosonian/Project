@@ -1,0 +1,177 @@
+/* ==========================================================================
+   PupilCheck v2.0 - CSS Custom Properties & Base Styles
+   variables.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Custom Properties (Design Tokens)
+   -------------------------------------------------------------------------- */
+
+:root {
+    /* --- Existing Core Palette --- */
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --primary: #e94560;
+    --primary-light: #ff6b81;
+    --text: #eee;
+    --text-muted: #aab;
+    --success: #2ed573;
+    --warning: #ffa502;
+    --danger: #ff4757;
+    --info: #70a1ff;
+    --radius: 12px;
+
+    /* --- New Extended Tokens --- */
+    --surface-elevated: #1c2a4a;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.22);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+
+    /* Typography */
+    --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+
+    /* Focus Ring */
+    --focus-ring: 0 0 0 3px rgba(233, 69, 96, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   2. Global Reset
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   3. Body Base Styles
+   -------------------------------------------------------------------------- */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    touch-action: manipulation;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --------------------------------------------------------------------------
+   4. Keyframe Animations
+   -------------------------------------------------------------------------- */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   5. Accessibility - High Contrast
+   -------------------------------------------------------------------------- */
+
+@media (prefers-contrast: high) {
+    :root {
+        --bg: #000000;
+        --surface: #111111;
+        --surface2: #1a1a1a;
+        --surface-elevated: #1a1a1a;
+        --text: #ffffff;
+        --text-muted: #cccccc;
+        --primary: #ff5577;
+        --primary-light: #ff8899;
+        --success: #44ff88;
+        --warning: #ffcc00;
+        --danger: #ff4444;
+        --info: #88bbff;
+        --border-subtle: rgba(255, 255, 255, 0.25);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+        --focus-ring: 0 0 0 3px rgba(255, 85, 119, 0.7);
+    }
+
+    .btn,
+    .eye-label,
+    .assessment-box,
+    .tip-box,
+    .disclaimer {
+        border-width: 2px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   6. Accessibility - Reduced Motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   7. Print Base Overrides
+   -------------------------------------------------------------------------- */
+
+@media print {
+    :root {
+        --bg: #ffffff;
+        --surface: #f5f5f5;
+        --surface2: #eeeeee;
+        --surface-elevated: #f0f0f0;
+        --text: #111111;
+        --text-muted: #555555;
+        --primary: #c0354a;
+        --primary-light: #d44d62;
+        --border-subtle: rgba(0, 0, 0, 0.12);
+    }
+
+    body {
+        background: white;
+        color: black;
+        min-height: auto;
+    }
+
+    .header {
+        border-bottom-color: #333;
+        position: static;
+    }
+
+    .btn {
+        display: none;
+    }
+
+    .screen {
+        max-width: 100%;
+        display: block !important;
+        animation: none;
+    }
+
+    .processing-overlay {
+        display: none !important;
+    }
+}

@@ -1,0 +1,963 @@
+/* ==========================================================================
+   PupilCheck v2.0 - Patient History Styles
+   history.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Screen Reader Only (Utility)
+   -------------------------------------------------------------------------- */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   2. Navigation Bar
+   -------------------------------------------------------------------------- */
+
+.history-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.history-nav-back {
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.history-nav-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.history-nav-actions .btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   3. Summary Stats
+   -------------------------------------------------------------------------- */
+
+.history-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.stat-chip {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+    transition: background var(--transition-normal);
+}
+
+.stat-chip-value {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary-light);
+    line-height: 1.2;
+}
+
+.stat-chip-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Search Bar
+   -------------------------------------------------------------------------- */
+
+.search-bar {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 12px 40px 12px 38px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+    min-height: 44px;
+}
+
+.search-bar input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.15);
+}
+
+.search-bar input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-bar-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.search-bar-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.search-bar-clear:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text);
+}
+
+.search-bar-clear:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   5. Sort Controls
+   -------------------------------------------------------------------------- */
+
+.history-sort {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.sort-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 36px;
+    text-align: center;
+}
+
+.sort-btn:hover {
+    background: var(--surface-elevated);
+    color: var(--text);
+}
+
+.sort-btn.active {
+    border-color: var(--primary);
+    color: var(--text);
+    background: rgba(233, 69, 96, 0.12);
+}
+
+.sort-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   6. Patient Card
+   -------------------------------------------------------------------------- */
+
+.patient-card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    outline: none;
+}
+
+.patient-card:hover {
+    border-color: rgba(233, 69, 96, 0.35);
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-sm);
+}
+
+.patient-card:active {
+    transform: scale(0.99);
+}
+
+.patient-card:focus-visible {
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+}
+
+.patient-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.patient-card-name {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    margin-right: 8px;
+}
+
+.patient-card-meta {
+    flex-shrink: 0;
+}
+
+.patient-card-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.patient-card-ratios {
+    font-size: 13px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.ratio-label {
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 2px;
+}
+
+.ratio-label.ratio-left {
+    color: var(--info);
+}
+
+.ratio-label.ratio-right {
+    color: var(--warning);
+}
+
+.ratio-divider {
+    margin: 0 8px;
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+.patient-card-footer {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.patient-card-created {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   7. Empty State
+   -------------------------------------------------------------------------- */
+
+.empty-state {
+    text-align: center;
+    padding: 48px 16px;
+}
+
+.empty-state-title {
+    margin-top: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.empty-state-desc {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.empty-state-btn {
+    margin-top: 20px;
+    max-width: 240px;
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+}
+
+/* --------------------------------------------------------------------------
+   8. Modal Overrides (History-specific)
+   -------------------------------------------------------------------------- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 300;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal {
+    position: relative;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-md);
+    animation: fadeIn 0.25s ease;
+    max-height: 85vh;
+    overflow-y: auto;
+    display: block;
+}
+
+.modal-large {
+    max-width: 560px;
+    max-height: 90vh;
+}
+
+.modal-confirm {
+    max-width: 360px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 0;
+    background: var(--surface-elevated);
+    z-index: 1;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    margin-right: 8px;
+}
+
+.modal-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    line-height: 1;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.modal-close:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.modal-body {
+    padding: 16px 20px 20px;
+}
+
+/* --------------------------------------------------------------------------
+   9. Patient Actions (inside modal)
+   -------------------------------------------------------------------------- */
+
+.patient-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.patient-actions .btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-danger-outline {
+    color: var(--danger);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    background: transparent;
+}
+
+.btn-danger-outline:hover {
+    background: rgba(255, 71, 87, 0.1);
+    border-color: rgba(255, 71, 87, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   10. Trend Chart
+   -------------------------------------------------------------------------- */
+
+.trend-chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.trend-chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-light);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.trend-chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    font-size: 11px;
+}
+
+.trend-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+}
+
+.trend-legend-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* --------------------------------------------------------------------------
+   11. Timeline Header
+   -------------------------------------------------------------------------- */
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.timeline-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.timeline-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   12. Measurement Item
+   -------------------------------------------------------------------------- */
+
+.measurements-list {
+    position: relative;
+}
+
+.measurements-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.measurement-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 2px;
+    position: relative;
+}
+
+.measurement-timeline-dot {
+    flex-shrink: 0;
+    width: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 16px;
+}
+
+.timeline-dot {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    border: 2px solid var(--surface-elevated);
+    box-shadow: 0 0 0 2px var(--border-subtle);
+    position: relative;
+    z-index: 1;
+}
+
+.timeline-dot-normal {
+    background: var(--success);
+    box-shadow: 0 0 0 2px rgba(46, 213, 115, 0.2);
+}
+
+.timeline-dot-mild {
+    background: var(--warning);
+    box-shadow: 0 0 0 2px rgba(255, 165, 2, 0.2);
+}
+
+.timeline-dot-significant {
+    background: var(--danger);
+    box-shadow: 0 0 0 2px rgba(255, 71, 87, 0.2);
+}
+
+/* Timeline connecting line */
+.measurement-item:not(:last-child) .measurement-timeline-dot::after {
+    content: '';
+    display: block;
+    width: 2px;
+    flex: 1;
+    background: var(--border-subtle);
+    margin-top: 4px;
+}
+
+.measurement-item-content {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    min-width: 0;
+    transition: border-color var(--transition-fast);
+}
+
+.measurement-item-content:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.measurement-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.measurement-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.measurement-mode {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-top: 1px;
+}
+
+.measurement-item-data {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.measurement-eye {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.measurement-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    background: var(--bg);
+}
+
+.measurement-eye-values {
+    min-width: 0;
+}
+
+.measurement-eye-label {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.measurement-eye-ratio {
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+}
+
+.measurement-eye-mm {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.measurement-diff {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 6px 0;
+    border-top: 1px solid var(--border-subtle);
+    font-variant-numeric: tabular-nums;
+}
+
+.rapd-flag {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--danger);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+
+.measurement-notes {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.measurement-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.measurement-action-btn {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    min-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   13. Import Dialog
+   -------------------------------------------------------------------------- */
+
+.import-textarea {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition-normal);
+    min-height: 100px;
+}
+
+.import-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.15);
+}
+
+.import-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.import-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+}
+
+.import-file-label {
+    cursor: pointer;
+    display: inline-flex !important;
+    align-items: center;
+    min-height: 40px;
+}
+
+.import-file-label:focus-visible,
+.import-file-label:focus-within {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   14. Badge Variants (assessment colors)
+   -------------------------------------------------------------------------- */
+
+.badge-normal {
+    background: rgba(46, 213, 115, 0.15);
+    color: var(--success);
+}
+
+.badge-mild {
+    background: rgba(255, 165, 2, 0.15);
+    color: var(--warning);
+}
+
+.badge-significant {
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--danger);
+}
+
+/* --------------------------------------------------------------------------
+   15. Storage Warning (Danger variant)
+   -------------------------------------------------------------------------- */
+
+.tip-box-danger {
+    background: rgba(255, 71, 87, 0.1);
+    border-color: rgba(255, 71, 87, 0.3);
+}
+
+.tip-box-danger strong {
+    color: var(--danger);
+}
+
+/* --------------------------------------------------------------------------
+   16. High Contrast Overrides
+   -------------------------------------------------------------------------- */
+
+@media (prefers-contrast: high) {
+    .patient-card {
+        border-width: 2px;
+    }
+
+    .measurement-item-content {
+        border-width: 2px;
+    }
+
+    .timeline-dot {
+        border-width: 3px;
+    }
+
+    .sort-btn {
+        border-width: 2px;
+    }
+
+    .search-bar input {
+        border-width: 2px;
+    }
+
+    .badge-normal,
+    .badge-mild,
+    .badge-significant {
+        font-weight: 800;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   17. Reduced Motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .patient-card,
+    .measurement-item-content,
+    .sort-btn,
+    .search-bar input {
+        transition: none;
+    }
+
+    .patient-card:active {
+        transform: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   18. Responsive - Small Screens
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 400px) {
+    .history-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .history-nav-actions {
+        justify-content: flex-end;
+    }
+
+    .modal-large {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: var(--radius) var(--radius) 0 0;
+        margin-top: auto;
+    }
+
+    .measurement-item-data {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .patient-actions {
+        gap: 6px;
+    }
+
+    .patient-actions .btn {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    .stat-chip-value {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 360px) {
+    .history-nav-actions .btn span {
+        display: none;
+    }
+
+    .history-nav-actions .btn svg {
+        margin-right: 0;
+    }
+
+    .measurement-eye-ratio {
+        font-size: 15px;
+    }
+
+    .measurement-thumb {
+        width: 40px;
+        height: 40px;
+    }
+
+    .sort-btn {
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   19. Print Styles
+   -------------------------------------------------------------------------- */
+
+@media print {
+    .history-nav,
+    .search-bar,
+    .history-sort,
+    .patient-actions,
+    .measurement-actions,
+    .empty-state-btn,
+    .modal-overlay,
+    #storageWarning {
+        display: none !important;
+    }
+
+    .patient-card {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+        background: white;
+        color: #333;
+    }
+
+    .stat-chip {
+        border: 1px solid #ccc;
+        background: #f5f5f5;
+    }
+
+    .stat-chip-value {
+        color: #333;
+    }
+
+    .stat-chip-label {
+        color: #666;
+    }
+}

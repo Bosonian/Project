@@ -1,0 +1,1235 @@
+/* ==========================================================================
+   PupilCheck v2.0 - Reusable Component Styles
+   components.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Header
+   -------------------------------------------------------------------------- */
+
+.header {
+    background: var(--surface);
+    padding: 12px 16px;
+    text-align: center;
+    border-bottom: 2px solid var(--primary);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.header .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Screen / View Container
+   -------------------------------------------------------------------------- */
+
+.screen {
+    display: none;
+    padding: 16px;
+    max-width: 500px;
+    margin: 0 auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* --------------------------------------------------------------------------
+   3. Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-light);
+}
+
+.btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background: rgba(15, 52, 96, 0.8);
+}
+
+.btn-success {
+    background: var(--success);
+    color: #1a1a2e;
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: #1a1a2e;
+}
+
+.btn-sm {
+    padding: 10px 16px;
+    font-size: 14px;
+    display: inline-block;
+    width: auto;
+}
+
+.btn-row {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-row .btn {
+    flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   4. Welcome Screen
+   -------------------------------------------------------------------------- */
+
+.welcome-icon {
+    font-size: 64px;
+    text-align: center;
+    margin: 24px 0 16px;
+}
+
+.welcome-title {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.welcome-desc {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   5. Instructions
+   -------------------------------------------------------------------------- */
+
+.instructions {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.instructions h3 {
+    font-size: 14px;
+    color: var(--primary-light);
+    margin-bottom: 10px;
+}
+
+.instructions ol {
+    padding-left: 20px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-muted);
+}
+
+.instructions ol li {
+    margin-bottom: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Tip Box
+   -------------------------------------------------------------------------- */
+
+.tip-box {
+    background: rgba(233, 69, 96, 0.1);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.tip-box strong {
+    color: var(--primary-light);
+}
+
+/* --------------------------------------------------------------------------
+   7. Camera
+   -------------------------------------------------------------------------- */
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.camera-container video,
+.camera-container canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 120px;
+    border: 2px dashed rgba(233, 69, 96, 0.7);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.camera-guide-text {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+.eye-label {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: var(--surface);
+    border-radius: var(--radius);
+}
+
+.eye-label.left {
+    border-left: 4px solid var(--info);
+}
+
+.eye-label.right {
+    border-left: 4px solid var(--warning);
+}
+
+.camera-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.camera-controls .btn {
+    flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   8. Measurement
+   -------------------------------------------------------------------------- */
+
+.measurement-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+    touch-action: none;
+}
+
+.measurement-container canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.measurement-info {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+.measurement-info .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.measurement-info .row:last-child {
+    border-bottom: none;
+}
+
+.measurement-info .label {
+    color: var(--text-muted);
+}
+
+.measurement-info .value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   9. Slider Group
+   -------------------------------------------------------------------------- */
+
+.slider-group {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+}
+
+.slider-group label span {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.slider-group input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+.slider-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider-group input[type="range"]::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* --------------------------------------------------------------------------
+   10. Circle Toggle
+   -------------------------------------------------------------------------- */
+
+.circle-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.circle-toggle button {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.circle-toggle button.active {
+    border-color: var(--primary);
+    color: var(--text);
+    background: rgba(233, 69, 96, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   11. Results - Comparison / Eye Cards
+   -------------------------------------------------------------------------- */
+
+.comparison {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.comparison .eye-card {
+    flex: 1;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.eye-card .eye-card-header {
+    padding: 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.eye-card.left .eye-card-header {
+    background: rgba(112, 161, 255, 0.2);
+    color: var(--info);
+}
+
+.eye-card.right .eye-card-header {
+    background: rgba(255, 165, 2, 0.2);
+    color: var(--warning);
+}
+
+.eye-card canvas {
+    width: 100%;
+    display: block;
+}
+
+.eye-card .eye-card-data {
+    padding: 10px;
+    font-size: 12px;
+}
+
+.eye-card .eye-card-data .big-number {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin: 4px 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.eye-card .eye-card-data .unit {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* --------------------------------------------------------------------------
+   12. Assessment Box
+   -------------------------------------------------------------------------- */
+
+.assessment-box {
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.assessment-box.normal {
+    background: rgba(46, 213, 115, 0.15);
+    border: 1px solid rgba(46, 213, 115, 0.4);
+}
+
+.assessment-box.mild {
+    background: rgba(255, 165, 2, 0.15);
+    border: 1px solid rgba(255, 165, 2, 0.4);
+}
+
+.assessment-box.significant {
+    background: rgba(255, 71, 87, 0.15);
+    border: 1px solid rgba(255, 71, 87, 0.4);
+}
+
+.assessment-box .assessment-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.assessment-box.normal .assessment-title {
+    color: var(--success);
+}
+
+.assessment-box.mild .assessment-title {
+    color: var(--warning);
+}
+
+.assessment-box.significant .assessment-title {
+    color: var(--danger);
+}
+
+.assessment-box .assessment-detail {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   13. Diff Display
+   -------------------------------------------------------------------------- */
+
+.diff-display {
+    text-align: center;
+    padding: 12px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+}
+
+.diff-display .diff-value {
+    font-size: 36px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.diff-display .diff-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   14. Clinical Notes
+   -------------------------------------------------------------------------- */
+
+.clinical-notes {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.clinical-notes h3 {
+    font-size: 14px;
+    color: var(--primary-light);
+    margin-bottom: 10px;
+}
+
+.clinical-notes ul {
+    padding-left: 18px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   15. Disclaimer
+   -------------------------------------------------------------------------- */
+
+.disclaimer {
+    background: rgba(255, 165, 2, 0.1);
+    border: 1px solid rgba(255, 165, 2, 0.3);
+    border-radius: var(--radius);
+    padding: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.disclaimer strong {
+    color: var(--warning);
+}
+
+/* --------------------------------------------------------------------------
+   16. Focus Badge
+   -------------------------------------------------------------------------- */
+
+.focus-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(112, 161, 255, 0.15);
+    border: 1px solid rgba(112, 161, 255, 0.3);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--info);
+    margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   17. Processing Overlay & Spinner
+   -------------------------------------------------------------------------- */
+
+.processing-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(26, 26, 46, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    flex-direction: column;
+}
+
+.processing-overlay.active {
+    display: flex;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   18. Orientation Hint
+   -------------------------------------------------------------------------- */
+
+.orientation-hint {
+    display: none;
+    text-align: center;
+    padding: 8px;
+    background: rgba(255, 165, 2, 0.15);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--warning);
+    margin-bottom: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   19. Torch Button (from reference)
+   -------------------------------------------------------------------------- */
+
+.torch-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+}
+
+.torch-btn.on {
+    border-color: var(--warning);
+    background: rgba(255, 165, 2, 0.15);
+    color: var(--warning);
+}
+
+.torch-btn .torch-icon {
+    font-size: 18px;
+}
+
+.torch-unavailable {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 4px;
+    opacity: 0.6;
+}
+
+/* --------------------------------------------------------------------------
+   20. Mode Toggle (from reference)
+   -------------------------------------------------------------------------- */
+
+.mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.mode-toggle button {
+    flex: 1;
+    padding: 12px 8px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mode-toggle button.active {
+    border-color: var(--primary);
+    color: var(--text);
+    background: rgba(233, 69, 96, 0.15);
+}
+
+.mode-toggle button small {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    margin-top: 3px;
+    opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   21. Reactivity Card (from reference)
+   -------------------------------------------------------------------------- */
+
+.reactivity-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.reactivity-card h4 {
+    font-size: 13px;
+    color: var(--primary-light);
+    margin-bottom: 8px;
+}
+
+.reactivity-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.reactivity-row:last-child {
+    border-bottom: none;
+}
+
+.reactivity-row .label {
+    color: var(--text-muted);
+}
+
+.reactivity-row .value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   22. Zoom Control (from reference)
+   -------------------------------------------------------------------------- */
+
+.zoom-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 10px;
+}
+
+.zoom-control label {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.zoom-control input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    outline: none;
+}
+
+.zoom-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.zoom-control input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.zoom-control .zoom-value {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.zoom-presets {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.zoom-presets button {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.zoom-presets button.active {
+    border-color: var(--primary);
+    color: var(--text);
+    background: rgba(233, 69, 96, 0.15);
+}
+
+/* ==========================================================================
+   NEW COMPONENTS - PupilCheck v2.0
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   23. Modal
+   -------------------------------------------------------------------------- */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-md);
+    animation: fadeIn 0.25s ease;
+    z-index: 1;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modal-content h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.modal-content p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   24. Hub Card (Landing Page)
+   -------------------------------------------------------------------------- */
+
+.hub-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: background var(--transition-normal),
+                border-color var(--transition-normal),
+                box-shadow var(--transition-normal),
+                transform var(--transition-fast);
+    text-decoration: none;
+    color: inherit;
+}
+
+.hub-card:hover {
+    background: var(--surface-elevated);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: var(--shadow-sm);
+}
+
+.hub-card:active {
+    transform: scale(0.98);
+    background: var(--surface2);
+}
+
+.hub-card-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: rgba(233, 69, 96, 0.12);
+    border-radius: 12px;
+}
+
+.hub-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.hub-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.hub-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.hub-card-arrow {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: transform var(--transition-fast);
+}
+
+.hub-card:hover .hub-card-arrow {
+    transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------------------
+   25. Mode Card (Mode Selection)
+   -------------------------------------------------------------------------- */
+
+.mode-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--surface);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: background var(--transition-normal),
+                border-color var(--transition-normal),
+                box-shadow var(--transition-normal),
+                transform var(--transition-fast);
+    text-align: center;
+}
+
+.mode-card:hover {
+    background: var(--surface-elevated);
+    border-color: rgba(233, 69, 96, 0.35);
+    box-shadow: var(--shadow-sm);
+}
+
+.mode-card:active {
+    transform: scale(0.97);
+}
+
+.mode-card.selected {
+    border-color: var(--primary);
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.mode-card-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.mode-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.mode-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   26. Status Dot (AI Status Indicator)
+   -------------------------------------------------------------------------- */
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #888;
+    vertical-align: middle;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.status-dot.green {
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(46, 213, 115, 0.5);
+}
+
+.status-dot.yellow {
+    background: var(--warning);
+    box-shadow: 0 0 6px rgba(255, 165, 2, 0.5);
+}
+
+.status-dot.gray {
+    background: #666;
+    box-shadow: none;
+}
+
+/* Pulsing animation for active status */
+.status-dot.green {
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% {
+        box-shadow: 0 0 6px rgba(46, 213, 115, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(46, 213, 115, 0.8);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   27. Badge (Count Badge)
+   -------------------------------------------------------------------------- */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.badge.badge-success {
+    background: var(--success);
+    color: #1a1a2e;
+}
+
+.badge.badge-warning {
+    background: var(--warning);
+    color: #1a1a2e;
+}
+
+.badge.badge-info {
+    background: var(--info);
+    color: #1a1a2e;
+}
+
+.badge.badge-muted {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   28. App Footer
+   -------------------------------------------------------------------------- */
+
+.app-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 24px;
+    opacity: 0.8;
+}
+
+.app-footer .footer-link {
+    color: var(--info);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+}
+
+.app-footer .footer-link:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+.app-footer .footer-link + .footer-link::before {
+    content: "\00b7";
+    margin: 0 8px;
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   29. Toast (Notification)
+   -------------------------------------------------------------------------- */
+
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    box-shadow: var(--shadow-md);
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.toast.toast-success {
+    border-left: 4px solid var(--success);
+}
+
+.toast.toast-warning {
+    border-left: 4px solid var(--warning);
+}
+
+.toast.toast-error {
+    border-left: 4px solid var(--danger);
+}
+
+.toast.toast-info {
+    border-left: 4px solid var(--info);
+}
+
+/* ==========================================================================
+   RESPONSIVE OVERRIDES
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   30. Small Screens (max-width: 360px)
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 360px) {
+    .comparison {
+        flex-direction: column;
+    }
+
+    .eye-card .eye-card-data .big-number {
+        font-size: 24px;
+    }
+
+    .hub-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .hub-card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .mode-card {
+        padding: 14px 12px;
+    }
+
+    .modal-content {
+        padding: 18px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   31. Landscape Orientation
+   -------------------------------------------------------------------------- */
+
+@media (orientation: landscape) {
+    .orientation-hint {
+        display: block;
+    }
+}
