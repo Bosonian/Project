@@ -1,0 +1,25 @@
+# Virtual environments
+ml/venv/
+venv/
+.venv/
+
+# ML training artifacts (intermediate)
+ml/models/
+ml/data/
+ml/*.h5
+ml/train_pupil_segmentation_executed.ipynb
+
+# Cloud Run model (too large for git, deploy separately)
+cloud/model/
+
+# Reference files
+*.claude-ref
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

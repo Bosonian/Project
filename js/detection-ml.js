@@ -51,9 +51,19 @@ const MLDetection = (() => {
             'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm'
         );
 
+        // Prefer local model (cached by SW), fallback to CDN
+        const localModelPath = 'models/face_landmarker.task';
+        const cdnModelPath = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+
+        let modelPath = cdnModelPath;
+        try {
+            const probe = await fetch(localModelPath, { method: 'HEAD' });
+            if (probe.ok) modelPath = localModelPath;
+        } catch (_) { /* local not available, use CDN */ }
+
         faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
             baseOptions: {
-                modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                modelAssetPath: modelPath,
                 delegate: 'GPU'
             },
             runningMode: 'IMAGE',
@@ -61,6 +71,7 @@ const MLDetection = (() => {
             outputFaceBlendshapes: false,
             outputFacialTransformationMatrixes: false
         });
+        console.log('FaceLandmarker loaded from:', modelPath);
 
         console.log('MediaPipe FaceLandmarker loaded');
     }

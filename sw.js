@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pupilcheck-v2.0';
+const CACHE_NAME = 'pupilcheck-v2.1';
 const ASSETS = [
   './',
   './index.html',
@@ -21,7 +21,8 @@ const ASSETS = [
   './lang/en.json',
   './lang/de.json',
   './icons/icon-192x192.png',
-  './icons/icon-512x512.png'
+  './icons/icon-512x512.png',
+  './models/face_landmarker.task'
 ];
 
 // ML model files - cached on first use (large, don't block install)
