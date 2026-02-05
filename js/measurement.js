@@ -188,6 +188,8 @@ const Measurement = (() => {
             state.stream.getTracks().forEach(function (t) { t.stop(); });
             state.stream = null;
         }
+        var video = $('cameraVideo');
+        if (video) video.srcObject = null;
     }
 
     async function switchCamera() {
@@ -871,8 +873,9 @@ const Measurement = (() => {
         }
 
         // Clinical notes
-        var larger = left.ratio > right.ratio ? 'Left (OS)' : 'Right (OD)';
-        var smaller = left.ratio > right.ratio ? 'Right (OD)' : 'Left (OS)';
+        var isEqual = Math.abs(left.ratio - right.ratio) < 0.001;
+        var larger = isEqual ? 'Equal' : (left.ratio > right.ratio ? 'Left (OS)' : 'Right (OD)');
+        var smaller = isEqual ? 'Equal' : (left.ratio > right.ratio ? 'Right (OD)' : 'Left (OS)');
         var notes = [];
 
         notes.push('Larger pupil: <strong>' + larger + '</strong> (ratio ' +
@@ -923,7 +926,8 @@ const Measurement = (() => {
                     if (constrPct > 15) return { text: 'Brisk', color: 'var(--success)' };
                     if (constrPct > 5) return { text: 'Sluggish', color: 'var(--warning)' };
                     if (constrPct > 0) return { text: 'Minimal', color: 'var(--warning)' };
-                    return { text: 'Fixed / Non-reactive', color: 'var(--danger)' };
+                    if (constrPct < -5) return { text: 'Paradoxical dilation', color: 'var(--danger)' };
+                    return { text: 'Fixed', color: 'var(--danger)' };
                 }
 
                 var leftLbl = reactivityLabel(leftPct);
@@ -1295,6 +1299,14 @@ const Measurement = (() => {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').catch(function () {});
         }
+
+        // Stop camera on page navigation / tab switch
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) stopCamera();
+        });
+        window.addEventListener('pagehide', function () {
+            stopCamera();
+        });
     }
 
     // Boot

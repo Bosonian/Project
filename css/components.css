@@ -998,7 +998,7 @@
     transform: scale(0.97);
 }
 
-.mode-card.selected {
+.mode-card.active {
     border-color: var(--primary);
     background: rgba(233, 69, 96, 0.1);
 }
@@ -1102,6 +1102,21 @@
 .badge.badge-muted {
     background: rgba(255, 255, 255, 0.15);
     color: var(--text-muted);
+}
+
+.badge-normal {
+    background: rgba(46, 213, 115, 0.15);
+    color: var(--success);
+}
+
+.badge-mild {
+    background: rgba(255, 165, 2, 0.15);
+    color: var(--warning);
+}
+
+.badge-significant {
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--danger);
 }
 
 /* --------------------------------------------------------------------------

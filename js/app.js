@@ -166,7 +166,7 @@ const App = (() => {
 
         if (reactivityData) {
             if (reactivityData.rapdFlag) score += 1;
-            if (reactivityData.leftLabel === 'Fixed' || reactivityData.rightLabel === 'Fixed') score += 2;
+            if (reactivityData.leftLabel?.startsWith('Fixed') || reactivityData.rightLabel?.startsWith('Fixed')) score += 2;
         }
 
         if (score >= 4) return 'urgent';
