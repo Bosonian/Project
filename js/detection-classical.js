@@ -1,18 +1,9 @@
 // PupilCheck - Classical Computer Vision Detection
-// Fallback pupil/iris detection using grayscale thresholding + flood fill + circle fitting
+// Fallback pupil/iris detection using enhanced preprocessing + thresholding + flood fill + circle fitting
 // No ML dependencies - runs entirely on CPU with canvas ImageData
+// Uses ImagePreprocess (CLAHE + red channel + gamma) for robust ambient-light detection
 
 const ClassicalDetection = (() => {
-
-    function toGrayscale(imageData) {
-        const d = imageData.data;
-        const gray = new Uint8Array(d.length / 4);
-        for (let i = 0; i < gray.length; i++) {
-            const idx = i * 4;
-            gray[i] = Math.round(0.299 * d[idx] + 0.587 * d[idx + 1] + 0.114 * d[idx + 2]);
-        }
-        return gray;
-    }
 
     function gaussianBlur(gray, w, h, radius) {
         const sigma = radius / 2;
@@ -120,7 +111,21 @@ const ClassicalDetection = (() => {
 
         const darkAvg = darkCount > 0 ? darkSum / darkCount : 0;
         const surroundAvg = surroundCount > 0 ? surroundSum / surroundCount : 128;
-        const threshold = darkAvg + (surroundAvg - darkAvg) * 0.35;
+
+        // Adaptive threshold factor based on contrast ratio
+        const contrastRatio = surroundAvg > 0 ? (surroundAvg - darkAvg) / surroundAvg : 0;
+        let thresholdFactor;
+        if (contrastRatio < 0.15) {
+            // Very low contrast (dim image even after preprocessing): tight threshold
+            thresholdFactor = 0.20;
+        } else if (contrastRatio < 0.30) {
+            // Low contrast: moderate threshold
+            thresholdFactor = 0.30;
+        } else {
+            // Good contrast: standard threshold
+            thresholdFactor = 0.35;
+        }
+        const threshold = darkAvg + (surroundAvg - darkAvg) * thresholdFactor;
 
         const visited = new Uint8Array(w * h);
         const queue = [Math.round(bestX) + Math.round(bestY) * w];
@@ -206,9 +211,40 @@ const ClassicalDetection = (() => {
         return { x: cx, y: cy, r: Math.round(Math.max(finalR, pupil.r + 10)) };
     }
 
-    // Main detection entry point
+    // Crop a sub-region from ImageData
+    function cropImageData(imageData, sx, sy, sw, sh) {
+        var src = imageData.data;
+        var w = imageData.width;
+        var out = new ImageData(sw, sh);
+        var dst = out.data;
+        for (var y = 0; y < sh; y++) {
+            for (var x = 0; x < sw; x++) {
+                var si = ((sy + y) * w + (sx + x)) * 4;
+                var di = (y * sw + x) * 4;
+                dst[di] = src[si];
+                dst[di + 1] = src[si + 1];
+                dst[di + 2] = src[si + 2];
+                dst[di + 3] = src[si + 3];
+            }
+        }
+        return out;
+    }
+
+    // Main single-eye detection entry point (now with preprocessing)
     function detect(imageData, width, height) {
-        const gray = toGrayscale(imageData);
+        // Use preprocessing if available, else fall back to raw grayscale
+        var gray;
+        if (typeof ImagePreprocess !== 'undefined') {
+            var enhanced = ImagePreprocess.enhance(imageData);
+            gray = enhanced.data;
+        } else {
+            var d = imageData.data;
+            gray = new Uint8Array(d.length / 4);
+            for (var i = 0; i < gray.length; i++) {
+                var idx = i * 4;
+                gray[i] = Math.round(0.299 * d[idx] + 0.587 * d[idx + 1] + 0.114 * d[idx + 2]);
+            }
+        }
 
         const scale = width > 640 ? Math.floor(width / 640) : 1;
         let workGray, workW, workH;
@@ -239,5 +275,28 @@ const ClassicalDetection = (() => {
         };
     }
 
-    return { detect };
+    // Dual-eye detection: split landscape image and detect each half
+    function detectBoth(imageData, width, height) {
+        var midX = Math.round(width / 2);
+
+        // Left half of image = patient's right eye (OD)
+        var rightHalf = cropImageData(imageData, 0, 0, midX, height);
+        var rightResult = detect(rightHalf, midX, height);
+        // Coordinates already relative to left edge (0,0)
+
+        // Right half = patient's left eye (OS)
+        var leftHalf = cropImageData(imageData, midX, 0, width - midX, height);
+        var leftResult = detect(leftHalf, width - midX, height);
+        // Offset x coordinates back to full image space
+        leftResult.pupil.x += midX;
+        leftResult.iris.x += midX;
+
+        return { left: leftResult, right: rightResult };
+    }
+
+    return {
+        detect: detect,
+        detectBoth: detectBoth,
+        cropImageData: cropImageData
+    };
 })();

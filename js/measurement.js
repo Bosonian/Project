@@ -42,6 +42,8 @@ const Measurement = (() => {
         capturedWidth: 0,
         capturedHeight: 0,
         _currentStoreKey: null,
+        captureMode: 'both',         // 'both' | 'single'
+        selectedDualEye: 'right',    // which eye is selected in dual view
         left: EMPTY_EYE(),
         right: EMPTY_EYE(),
         leftLight: EMPTY_EYE(),
@@ -92,15 +94,40 @@ const Measurement = (() => {
         }
     }
 
+    function setCaptureMode(mode) {
+        state.captureMode = mode;
+        localStorage.setItem('pupilcheck_captureMode', mode);
+        updateCaptureModeUI();
+    }
+
+    function updateCaptureModeUI() {
+        var btnBoth = $('captureBoth');
+        var btnSingle = $('captureSingle');
+        if (btnBoth) {
+            btnBoth.classList.toggle('active', state.captureMode === 'both');
+            btnBoth.setAttribute('aria-pressed', state.captureMode === 'both' ? 'true' : 'false');
+        }
+        if (btnSingle) {
+            btnSingle.classList.toggle('active', state.captureMode === 'single');
+            btnSingle.setAttribute('aria-pressed', state.captureMode === 'single' ? 'true' : 'false');
+        }
+    }
+
     function startMeasurement() {
-        state.currentEye = 'left';
         state.reactivityPhase = 'dark';
         state.left = EMPTY_EYE();
         state.right = EMPTY_EYE();
         state.leftLight = EMPTY_EYE();
         state.rightLight = EMPTY_EYE();
         state.torchOn = false;
-        openCamera();
+
+        if (state.captureMode === 'both') {
+            state.currentEye = 'both';
+            openCamera();
+        } else {
+            state.currentEye = 'left';
+            openCamera();
+        }
     }
 
     function goBack() {
@@ -131,10 +158,15 @@ const Measurement = (() => {
     // CAMERA
     // ------------------------------------------------------------------
     async function openCamera() {
-        var label = state.currentEye === 'left' ? 'Left Eye (OS)' : 'Right Eye (OD)';
+        var label;
+        if (state.captureMode === 'both') {
+            label = 'Both Eyes';
+        } else {
+            label = state.currentEye === 'left' ? 'Left Eye (OS)' : 'Right Eye (OD)';
+        }
         var eyeLabelEl = $('cameraEyeLabel');
         eyeLabelEl.textContent = label;
-        eyeLabelEl.className = 'eye-label ' + state.currentEye;
+        eyeLabelEl.className = 'eye-label ' + (state.captureMode === 'both' ? '' : state.currentEye);
         showScreen('screenCamera');
 
         try {
@@ -146,8 +178,8 @@ const Measurement = (() => {
             var constraints = {
                 video: {
                     facingMode: state.facingMode,
-                    width: { ideal: 1280 },
-                    height: { ideal: 960 }
+                    width: { ideal: state.captureMode === 'both' ? 1920 : 1280 },
+                    height: { ideal: state.captureMode === 'both' ? 1080 : 960 }
                 }
             };
             state.stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -238,7 +270,12 @@ const Measurement = (() => {
         state[storeKey].torchOn = state.torchOn;
 
         stopCamera();
-        processAndShowMeasurement(storeKey);
+        if (state.captureMode === 'both') {
+            var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'light' : 'dark';
+            processAndShowDualMeasurement(phase);
+        } else {
+            processAndShowMeasurement(storeKey);
+        }
     }
 
     // ------------------------------------------------------------------
@@ -252,6 +289,12 @@ const Measurement = (() => {
                 await track.applyConstraints({ advanced: [{ torch: on }] });
                 state.torchOn = on;
                 updateTorchUI();
+                // Adjust exposure for torch
+                if (on) {
+                    await optimizeExposureForTorch();
+                } else {
+                    await resetExposure();
+                }
             }
         } catch (_e) {
             state.torchSupported = false;
@@ -261,6 +304,39 @@ const Measurement = (() => {
 
     async function toggleTorch() {
         await setTorch(!state.torchOn);
+    }
+
+    async function optimizeExposureForTorch() {
+        if (!state.stream) return;
+        try {
+            var track = state.stream.getVideoTracks()[0];
+            if (!track) return;
+            var caps = track.getCapabilities();
+
+            // Android Chrome 101+: manual exposure mode
+            if (caps.exposureMode && caps.exposureMode.indexOf('manual') !== -1) {
+                await track.applyConstraints({ advanced: [{ exposureMode: 'manual' }] });
+                if (caps.exposureTime) {
+                    var targetExp = Math.max(caps.exposureTime.min || 1, 30);
+                    await track.applyConstraints({ advanced: [{ exposureTime: targetExp }] });
+                }
+            }
+            if (caps.iso) {
+                await track.applyConstraints({ advanced: [{ iso: caps.iso.min }] });
+            }
+        } catch (_e) { /* exposure control not supported */ }
+    }
+
+    async function resetExposure() {
+        if (!state.stream) return;
+        try {
+            var track = state.stream.getVideoTracks()[0];
+            if (!track) return;
+            var caps = track.getCapabilities();
+            if (caps.exposureMode && caps.exposureMode.indexOf('continuous') !== -1) {
+                await track.applyConstraints({ advanced: [{ exposureMode: 'continuous' }] });
+            }
+        } catch (_e) { /* exposure reset not supported */ }
     }
 
     function updateTorchUI() {
@@ -631,6 +707,315 @@ const Measurement = (() => {
     }
 
     // ------------------------------------------------------------------
+    // DUAL-EYE MEASUREMENT (Both Eyes mode)
+    // ------------------------------------------------------------------
+    async function processAndShowDualMeasurement(phase) {
+        showProcessing(true);
+        var imageData = state.capturedImage;
+        var w = state.capturedWidth;
+        var h = state.capturedHeight;
+        var result = null;
+
+        // 1. Try ML (both eyes from single image)
+        if (typeof MLDetection !== 'undefined' && MLDetection.isReady()) {
+            updateProcessingText('Analyzing both eyes with ML...');
+            try {
+                result = await MLDetection.detectBothEyes(imageData, w, h);
+            } catch (e) {
+                console.warn('ML dual detection failed:', e.message);
+                result = null;
+            }
+        }
+
+        // 2. Try classical (split image in half)
+        if (!result) {
+            updateProcessingText('Detecting pupils...');
+            try {
+                result = ClassicalDetection.detectBoth(imageData, w, h);
+            } catch (e) {
+                console.warn('Classical dual detection failed:', e.message);
+                result = null;
+            }
+        }
+
+        // 3. Manual fallback — centered circles for both halves
+        if (!result) {
+            result = {
+                left: {
+                    pupil: { x: Math.round(w * 0.75), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.04) },
+                    iris: { x: Math.round(w * 0.75), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.12) },
+                    confidence: { pupil: 0, iris: 0 },
+                    method: 'fallback'
+                },
+                right: {
+                    pupil: { x: Math.round(w * 0.25), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.04) },
+                    iris: { x: Math.round(w * 0.25), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.12) },
+                    confidence: { pupil: 0, iris: 0 },
+                    method: 'fallback'
+                }
+            };
+        }
+
+        // Store to appropriate state keys
+        var leftKey = (phase === 'light') ? 'leftLight' : 'left';
+        var rightKey = (phase === 'light') ? 'rightLight' : 'right';
+
+        var leftEye = state[leftKey];
+        leftEye.pupil = result.left.pupil;
+        leftEye.iris = result.left.iris;
+        leftEye.image = imageData;
+        leftEye.imageWidth = w;
+        leftEye.imageHeight = h;
+        leftEye.detectionMethod = result.left.method || 'unknown';
+
+        var rightEye = state[rightKey];
+        rightEye.pupil = result.right.pupil;
+        rightEye.iris = result.right.iris;
+        rightEye.image = imageData;
+        rightEye.imageWidth = w;
+        rightEye.imageHeight = h;
+        rightEye.detectionMethod = result.right.method || 'unknown';
+
+        showProcessing(false);
+        showDualMeasurementScreen(phase);
+    }
+
+    function showDualMeasurementScreen(phase) {
+        var phaseLabel = (phase === 'light') ? 'Both Eyes (with light)' : 'Both Eyes';
+        var el = $('dualPhaseLabel');
+        if (el) el.textContent = phaseLabel;
+
+        state.selectedDualEye = 'right';
+        state.selectedCircle = 'pupil';
+
+        showScreen('screenMeasureDual');
+        selectDualEye('right');
+        drawDualCanvases();
+        updateDualStats();
+    }
+
+    function selectDualEye(eye) {
+        state.selectedDualEye = eye;
+        var panelLeft = $('dualPanelLeft');
+        var panelRight = $('dualPanelRight');
+        if (panelLeft) panelLeft.classList.toggle('selected', eye === 'left');
+        if (panelRight) panelRight.classList.toggle('selected', eye === 'right');
+
+        var label = $('dualSelectedLabel');
+        if (label) label.textContent = (eye === 'right' ? 'Right (OD)' : 'Left (OS)') + ' selected';
+
+        updateDualSliders();
+    }
+
+    function selectCircleDual(which) {
+        state.selectedCircle = which;
+        var pupilBtn = $('dualTogglePupil');
+        var irisBtn = $('dualToggleIris');
+        if (pupilBtn) {
+            pupilBtn.classList.toggle('active', which === 'pupil');
+            pupilBtn.setAttribute('aria-pressed', which === 'pupil' ? 'true' : 'false');
+        }
+        if (irisBtn) {
+            irisBtn.classList.toggle('active', which === 'iris');
+            irisBtn.setAttribute('aria-pressed', which === 'iris' ? 'true' : 'false');
+        }
+        updateDualSliders();
+    }
+
+    function updateDualSliders() {
+        var eyeKey = state.selectedDualEye;
+        var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+        var eyeData = state[eyeKey + phase] || state[eyeKey];
+        var circle = state.selectedCircle === 'pupil' ? eyeData.pupil : eyeData.iris;
+        if (!circle) return;
+
+        var sliderX = $('dualSliderX');
+        var sliderY = $('dualSliderY');
+        var sliderR = $('dualSliderR');
+
+        sliderX.max = state.capturedWidth;
+        sliderY.max = state.capturedHeight;
+        sliderR.max = Math.round(Math.min(state.capturedWidth, state.capturedHeight) / 2);
+
+        sliderX.value = circle.x;
+        sliderY.value = circle.y;
+        sliderR.value = circle.r;
+
+        $('dualSliderXValue').textContent = circle.x + ' px';
+        $('dualSliderYValue').textContent = circle.y + ' px';
+        $('dualSliderRValue').textContent = circle.r + ' px';
+    }
+
+    function onDualSliderChange() {
+        var eyeKey = state.selectedDualEye;
+        var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+        var eyeData = state[eyeKey + phase] || state[eyeKey];
+        var circle = state.selectedCircle === 'pupil' ? eyeData.pupil : eyeData.iris;
+        if (!circle) return;
+
+        circle.x = parseInt($('dualSliderX').value, 10);
+        circle.y = parseInt($('dualSliderY').value, 10);
+        circle.r = parseInt($('dualSliderR').value, 10);
+
+        $('dualSliderXValue').textContent = circle.x + ' px';
+        $('dualSliderYValue').textContent = circle.y + ' px';
+        $('dualSliderRValue').textContent = circle.r + ' px';
+
+        drawDualCanvases();
+        updateDualStats();
+    }
+
+    function drawDualCanvases() {
+        var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+        drawDualEyeCanvas('dualCanvasRight', state['right' + phase] || state.right, 'right');
+        drawDualEyeCanvas('dualCanvasLeft', state['left' + phase] || state.left, 'left');
+    }
+
+    function drawDualEyeCanvas(canvasId, eyeData, whichEye) {
+        var canvas = $(canvasId);
+        if (!canvas || !eyeData.image) return;
+        var ctx = canvas.getContext('2d');
+
+        var iris = eyeData.iris;
+        if (!iris) return;
+
+        // Crop region around iris with padding
+        var pad = iris.r * 1.8;
+        var sx = Math.max(0, Math.round(iris.x - pad));
+        var sy = Math.max(0, Math.round(iris.y - pad));
+        var sw = Math.min(Math.round(pad * 2), eyeData.imageWidth - sx);
+        var sh = Math.min(Math.round(pad * 2), eyeData.imageHeight - sy);
+
+        // Draw source image to temp canvas
+        var temp = document.createElement('canvas');
+        temp.width = eyeData.imageWidth;
+        temp.height = eyeData.imageHeight;
+        temp.getContext('2d').putImageData(eyeData.image, 0, 0);
+
+        // Render cropped region
+        var size = 300;
+        canvas.width = size;
+        canvas.height = size;
+        ctx.drawImage(temp, sx, sy, sw, sh, 0, 0, size, size);
+
+        var scaleX = size / sw;
+        var scaleY = size / sh;
+
+        var isSelected = state.selectedDualEye === whichEye;
+
+        // Draw iris circle
+        if (iris) {
+            var ix = (iris.x - sx) * scaleX;
+            var iy = (iris.y - sy) * scaleY;
+            var ir = iris.r * scaleX;
+            ctx.beginPath();
+            ctx.arc(ix, iy, ir, 0, Math.PI * 2);
+            ctx.strokeStyle = (isSelected && state.selectedCircle === 'iris') ? '#ffa502' : 'rgba(255, 165, 2, 0.5)';
+            ctx.lineWidth = (isSelected && state.selectedCircle === 'iris') ? 3 : 2;
+            ctx.setLineDash((isSelected && state.selectedCircle === 'iris') ? [] : [6, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Draw pupil circle
+        if (eyeData.pupil) {
+            var px = (eyeData.pupil.x - sx) * scaleX;
+            var py = (eyeData.pupil.y - sy) * scaleY;
+            var pr = eyeData.pupil.r * scaleX;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.strokeStyle = (isSelected && state.selectedCircle === 'pupil') ? '#e94560' : 'rgba(233, 69, 96, 0.5)';
+            ctx.lineWidth = (isSelected && state.selectedCircle === 'pupil') ? 3 : 2;
+            ctx.setLineDash((isSelected && state.selectedCircle === 'pupil') ? [] : [6, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Semi-transparent fill
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(233, 69, 96, 0.1)';
+            ctx.fill();
+        }
+    }
+
+    function updateDualStats() {
+        var irisRef = getIrisRefMm();
+        var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+
+        var leftData = state['left' + phase] || state.left;
+        var rightData = state['right' + phase] || state.right;
+
+        // Right eye
+        if (rightData.pupil && rightData.iris) {
+            var rPupilDia = rightData.pupil.r * 2;
+            var rIrisDia = rightData.iris.r * 2;
+            var rRatio = rIrisDia > 0 ? rPupilDia / rIrisDia : 0;
+            var rMm = rRatio * irisRef;
+            $('dualRightRatio').textContent = rRatio.toFixed(3);
+            $('dualRightMm').textContent = '~' + rMm.toFixed(1) + ' mm';
+        }
+
+        // Left eye
+        if (leftData.pupil && leftData.iris) {
+            var lPupilDia = leftData.pupil.r * 2;
+            var lIrisDia = leftData.iris.r * 2;
+            var lRatio = lIrisDia > 0 ? lPupilDia / lIrisDia : 0;
+            var lMm = lRatio * irisRef;
+            $('dualLeftRatio').textContent = lRatio.toFixed(3);
+            $('dualLeftMm').textContent = '~' + lMm.toFixed(1) + ' mm';
+        }
+    }
+
+    function retakePhotoDual() {
+        var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+        state['left' + phase] = EMPTY_EYE();
+        state['right' + phase] = EMPTY_EYE();
+        openCamera();
+    }
+
+    function confirmDual() {
+        var irisRef = getIrisRefMm();
+        var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+
+        // Compute and store ratios for both eyes
+        var keys = ['left', 'right'];
+        for (var i = 0; i < keys.length; i++) {
+            var eyeData = state[keys[i] + phase] || state[keys[i]];
+            if (eyeData.pupil && eyeData.iris) {
+                var pupilDia = eyeData.pupil.r * 2;
+                var irisDia = eyeData.iris.r * 2;
+                eyeData.ratio = irisDia > 0 ? pupilDia / irisDia : 0;
+                eyeData.pupilMm = eyeData.ratio * irisRef;
+            }
+        }
+
+        // Determine next step
+        if (state.mode === 'reactivity' && state.reactivityPhase === 'dark') {
+            // Move to light phase — show guidance screen
+            state.reactivityPhase = 'light';
+            showScreen('screenReactivityGuide');
+
+            // Show/hide torch option based on support
+            var torchOption = $('guideTorchOption');
+            if (torchOption) {
+                torchOption.style.display = state.torchSupported ? '' : 'none';
+            }
+        } else {
+            showResults();
+        }
+    }
+
+    function openCameraReactivityLight() {
+        // From reactivity guide → open camera for light-phase capture
+        openCamera();
+        // Auto-enable torch if supported
+        if (state.torchSupported) {
+            // Small delay to let camera initialize
+            setTimeout(function() { setTorch(true); }, 500);
+        }
+    }
+
+    // ------------------------------------------------------------------
     // CANVAS TOUCH / POINTER INTERACTION
     // ------------------------------------------------------------------
     function setupCanvasInteraction() {
@@ -746,6 +1131,110 @@ const Measurement = (() => {
         container.addEventListener('touchmove', onMove, { passive: false });
         container.addEventListener('touchend', onEnd);
         container.addEventListener('touchcancel', onEnd);
+    }
+
+    function setupDualCanvasInteraction() {
+        var panels = ['dualPanelRight', 'dualPanelLeft'];
+
+        for (var p = 0; p < panels.length; p++) {
+            (function(panelId, eyeKey) {
+                var panel = $(panelId);
+                if (!panel) return;
+
+                var dragging = false;
+                var lastPos = null;
+                var dragTarget = null;
+
+                function getCanvasCoords(e, canvas) {
+                    var rect = canvas.getBoundingClientRect();
+                    var scaleX = canvas.width / rect.width;
+                    var scaleY = canvas.height / rect.height;
+                    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+                }
+
+                function toImageCoords(canvasPos, eyeData) {
+                    if (!eyeData.iris) return canvasPos;
+                    var pad = eyeData.iris.r * 1.8;
+                    var sx = Math.max(0, Math.round(eyeData.iris.x - pad));
+                    var sy = Math.max(0, Math.round(eyeData.iris.y - pad));
+                    var sw = Math.min(Math.round(pad * 2), eyeData.imageWidth - sx);
+                    var sh = Math.min(Math.round(pad * 2), eyeData.imageHeight - sy);
+                    return {
+                        x: sx + canvasPos.x / 300 * sw,
+                        y: sy + canvasPos.y / 300 * sh
+                    };
+                }
+
+                var canvas = panel.querySelector('canvas');
+                if (!canvas) return;
+
+                canvas.addEventListener('pointerdown', function(e) {
+                    selectDualEye(eyeKey);
+                    var pos = getCanvasCoords(e, canvas);
+                    var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+                    var eyeData = state[eyeKey + phase] || state[eyeKey];
+                    var imgPos = toImageCoords(pos, eyeData);
+
+                    if (eyeData.pupil) {
+                        var pDist = Math.sqrt(Math.pow(imgPos.x - eyeData.pupil.x, 2) + Math.pow(imgPos.y - eyeData.pupil.y, 2));
+                        if (Math.abs(pDist - eyeData.pupil.r) < Math.max(15, eyeData.pupil.r * 0.2)) {
+                            dragTarget = 'pupil-resize'; selectCircleDual('pupil');
+                        } else if (pDist < eyeData.pupil.r) {
+                            dragTarget = 'pupil-move'; selectCircleDual('pupil');
+                        }
+                    }
+                    if (!dragTarget && eyeData.iris) {
+                        var iDist = Math.sqrt(Math.pow(imgPos.x - eyeData.iris.x, 2) + Math.pow(imgPos.y - eyeData.iris.y, 2));
+                        if (Math.abs(iDist - eyeData.iris.r) < Math.max(15, eyeData.iris.r * 0.15)) {
+                            dragTarget = 'iris-resize'; selectCircleDual('iris');
+                        } else if (iDist < eyeData.iris.r) {
+                            dragTarget = 'iris-move'; selectCircleDual('iris');
+                        }
+                    }
+
+                    if (dragTarget) {
+                        dragging = true;
+                        lastPos = imgPos;
+                        e.preventDefault();
+                    }
+                });
+
+                canvas.addEventListener('pointermove', function(e) {
+                    if (!dragging || !lastPos) return;
+                    var pos = getCanvasCoords(e, canvas);
+                    var phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? 'Light' : '';
+                    var eyeData = state[eyeKey + phase] || state[eyeKey];
+                    var imgPos = toImageCoords(pos, eyeData);
+                    var dx = imgPos.x - lastPos.x;
+                    var dy = imgPos.y - lastPos.y;
+                    lastPos = imgPos;
+
+                    if (dragTarget === 'pupil-move') {
+                        eyeData.pupil.x = Math.round(eyeData.pupil.x + dx);
+                        eyeData.pupil.y = Math.round(eyeData.pupil.y + dy);
+                    } else if (dragTarget === 'iris-move') {
+                        eyeData.iris.x = Math.round(eyeData.iris.x + dx);
+                        eyeData.iris.y = Math.round(eyeData.iris.y + dy);
+                    } else if (dragTarget === 'pupil-resize') {
+                        var distP = Math.sqrt(Math.pow(imgPos.x - eyeData.pupil.x, 2) + Math.pow(imgPos.y - eyeData.pupil.y, 2));
+                        eyeData.pupil.r = Math.max(5, Math.round(distP));
+                    } else if (dragTarget === 'iris-resize') {
+                        var distI = Math.sqrt(Math.pow(imgPos.x - eyeData.iris.x, 2) + Math.pow(imgPos.y - eyeData.iris.y, 2));
+                        eyeData.iris.r = Math.max(10, Math.round(distI));
+                    }
+
+                    updateDualSliders();
+                    drawDualCanvases();
+                    updateDualStats();
+                    e.preventDefault();
+                });
+
+                canvas.addEventListener('pointerup', function() { dragging = false; dragTarget = null; lastPos = null; });
+                canvas.addEventListener('pointercancel', function() { dragging = false; dragTarget = null; lastPos = null; });
+            })(panels[p], p === 0 ? 'right' : 'left');
+        }
     }
 
     // ------------------------------------------------------------------
@@ -1269,6 +1758,11 @@ const Measurement = (() => {
 
         // Setup canvas touch/pointer interaction
         setupCanvasInteraction();
+        setupDualCanvasInteraction();
+
+        // Restore capture mode
+        state.captureMode = localStorage.getItem('pupilcheck_captureMode') || 'both';
+        updateCaptureModeUI();
 
         // Init i18n (async, non-blocking)
         if (typeof i18n !== 'undefined') {
@@ -1320,6 +1814,7 @@ const Measurement = (() => {
     return {
         init: init,
         setMode: setMode,
+        setCaptureMode: setCaptureMode,
         startMeasurement: startMeasurement,
         goBack: goBack,
         startOver: startOver,
@@ -1334,6 +1829,12 @@ const Measurement = (() => {
         onSliderChange: onSliderChange,
         retakePhoto: retakePhoto,
         confirmMeasurement: confirmMeasurement,
+        selectDualEye: selectDualEye,
+        selectCircleDual: selectCircleDual,
+        onDualSliderChange: onDualSliderChange,
+        retakePhotoDual: retakePhotoDual,
+        confirmDual: confirmDual,
+        openCameraReactivityLight: openCameraReactivityLight,
         saveToPatient: saveToPatient,
         saveToNewPatient: saveToNewPatient,
         closeSaveModal: closeSaveModal,

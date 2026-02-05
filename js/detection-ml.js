@@ -128,6 +128,7 @@ const MLDetection = (() => {
     }
 
     // Detect pupil within iris ROI using threshold (fallback when TFLite not available)
+    // Uses preprocessing (red channel + CLAHE) for better contrast in ambient light
     function detectPupilInROI(imageData, irisCircle, fullW, fullH) {
         const cx = irisCircle.x, cy = irisCircle.y, ir = irisCircle.r;
         const roiSize = Math.round(ir * 2.2);
@@ -136,7 +137,7 @@ const MLDetection = (() => {
         const roiW = Math.min(roiSize, fullW - roiX);
         const roiH = Math.min(roiSize, fullH - roiY);
 
-        // Extract grayscale ROI
+        // Use red channel for better pupil-iris contrast (melanin reflects red)
         const data = imageData.data;
         let darkSum = 0, darkCount = 0;
         let totalSum = 0, totalCount = 0;
@@ -150,7 +151,8 @@ const MLDetection = (() => {
                 if (dist > ir) continue;
 
                 const idx = (py * fullW + px) * 4;
-                const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                // Use red channel instead of luminance for better iris-pupil contrast
+                const gray = data[idx];
                 totalSum += gray;
                 totalCount++;
 
@@ -163,7 +165,14 @@ const MLDetection = (() => {
 
         const centerAvg = darkCount > 0 ? darkSum / darkCount : 50;
         const overallAvg = totalCount > 0 ? totalSum / totalCount : 128;
-        const threshold = centerAvg + (overallAvg - centerAvg) * 0.35;
+
+        // Adaptive threshold based on contrast ratio
+        const contrastRatio = overallAvg > 0 ? (overallAvg - centerAvg) / overallAvg : 0;
+        let thresholdFactor;
+        if (contrastRatio < 0.15) thresholdFactor = 0.20;
+        else if (contrastRatio < 0.30) thresholdFactor = 0.30;
+        else thresholdFactor = 0.35;
+        const threshold = centerAvg + (overallAvg - centerAvg) * thresholdFactor;
 
         // Flood fill from iris center
         const pixels = [];
@@ -182,7 +191,7 @@ const MLDetection = (() => {
             if (dist > ir * 0.8) continue;
 
             const idx = (py * fullW + px) * 4;
-            const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+            const gray = data[idx]; // Red channel for consistency
             if (gray > threshold) continue;
 
             pixels.push({ x: px, y: py });
@@ -341,9 +350,68 @@ const MLDetection = (() => {
         };
     }
 
+    // Detect BOTH eyes from a single landscape image
+    // Returns { left: { pupil, iris, confidence, method }, right: { ... } }
+    // L/R convention: MediaPipe LEFT_IRIS = patient's left (OS), RIGHT_IRIS = patient's right (OD)
+    async function detectBothEyes(imageData, width, height) {
+        if (!faceLandmarker) {
+            throw new Error('MediaPipe not loaded');
+        }
+
+        // Create canvas for MediaPipe input (uses raw RGB — trained for that)
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.putImageData(imageData, 0, 0);
+
+        // Run MediaPipe
+        const results = faceLandmarker.detect(canvas);
+
+        if (!results.faceLandmarks || results.faceLandmarks.length === 0) {
+            throw new Error('No face detected');
+        }
+
+        const landmarks = results.faceLandmarks[0];
+
+        // Extract BOTH irises (not just the more centered one)
+        const leftIris = extractIrisCircle(landmarks, LEFT_IRIS, width, height);
+        const rightIris = extractIrisCircle(landmarks, RIGHT_IRIS, width, height);
+
+        // Detect pupil in each iris ROI
+        const leftPupil = await detectPupilWithModel(imageData, leftIris, width, height);
+        const rightPupil = await detectPupilWithModel(imageData, rightIris, width, height);
+
+        // Sanity checks for both eyes
+        if (leftPupil.r >= leftIris.r * 0.95) leftPupil.r = Math.round(leftIris.r * 0.4);
+        if (leftPupil.r < 3) leftPupil.r = Math.round(leftIris.r * 0.3);
+        if (rightPupil.r >= rightIris.r * 0.95) rightPupil.r = Math.round(rightIris.r * 0.4);
+        if (rightPupil.r < 3) rightPupil.r = Math.round(rightIris.r * 0.3);
+
+        var irisConf = (leftIris.r > 10 && rightIris.r > 10) ? 0.85 : 0.5;
+        var pupilConf = pupilInterpreter ? 0.8 : 0.6;
+        var method = pupilInterpreter ? 'ml-full' : 'ml-mediapipe';
+
+        return {
+            left: {
+                pupil: leftPupil,
+                iris: leftIris,
+                confidence: { pupil: pupilConf, iris: irisConf },
+                method: method
+            },
+            right: {
+                pupil: rightPupil,
+                iris: rightIris,
+                confidence: { pupil: pupilConf, iris: irisConf },
+                method: method
+            }
+        };
+    }
+
     return {
         init,
         detect,
+        detectBothEyes,
         isReady,
         getStatus,
         setStatusCallback

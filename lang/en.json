@@ -1,7 +1,7 @@
 {
     "appName": "PupilCheck",
     "tagline": "Clinical Pupil Assessment Tool",
-    "version": "v2.0",
+    "version": "v2.1",
 
     "hub.newMeasurement": "New Measurement",
     "hub.newMeasurementDesc": "Capture and analyze pupil size and reactivity",
@@ -47,6 +47,23 @@
     "measure.torchOff": "Torch Off",
     "measure.torchNotAvailable": "Torch not available on this device",
     "measure.zoom": "Zoom",
+    "measure.bothEyes": "Both Eyes",
+    "measure.bothEyesDesc": "Single landscape photo",
+    "measure.singleEye": "Single Eye",
+    "measure.singleEyeDesc": "Sequential close-ups",
+    "measure.confirmBoth": "Confirm Both",
+    "measure.tapToAdjust": "Tap an eye to adjust",
+    "measure.analyzingBothML": "Analyzing both eyes with ML...",
+    "measure.analyzingBothClassical": "Detecting pupils...",
+
+    "reactivity.guide.title": "Light Stimulus",
+    "reactivity.guide.description": "Apply a light stimulus to the patient's eyes to test pupil reactivity.",
+    "reactivity.guide.torch": "Phone torch",
+    "reactivity.guide.torchDesc": "Torch will activate. Hold phone 20-30 cm from the face to avoid blinding the patient.",
+    "reactivity.guide.penlight": "Penlight (recommended)",
+    "reactivity.guide.penlightDesc": "Shine a penlight from the side into both eyes. This is the standard clinical technique.",
+    "reactivity.guide.tip": "Keep the light on while you capture. Maintain the same distance as the first photo.",
+    "reactivity.guide.ready": "Ready to Capture",
 
     "reactivity.darkPhase": "Dark Phase",
     "reactivity.lightPhase": "Light Phase",
@@ -146,5 +163,5 @@
 
     "about.aboutTitle": "About PupilCheck",
     "about.aboutDesc": "PupilCheck is a progressive web app for clinical pupil assessment. It uses computer vision and optional machine learning to measure pupil size and reactivity at the bedside.",
-    "about.version": "Version 2.0"
+    "about.version": "Version 2.1"
 }

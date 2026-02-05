@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pupilcheck-v2.1';
+const CACHE_NAME = 'pupilcheck-v2.2';
 const ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ const ASSETS = [
   './js/app.js',
   './js/i18n.js',
   './js/patient-store.js',
+  './js/detection-preprocess.js',
   './js/detection-classical.js',
   './js/detection-ml.js',
   './js/detection-cloud.js',

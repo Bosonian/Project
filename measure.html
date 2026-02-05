@@ -51,9 +51,9 @@
     <div class="instructions">
       <h3>How to Use</h3>
       <ol>
-        <li>Photograph the left eye up close (entire iris visible)</li>
-        <li>Adjust the auto-detected pupil and iris circles</li>
-        <li>Repeat for the right eye</li>
+        <li>Choose "Both Eyes" for a single landscape photo, or "Single Eye" for sequential close-ups</li>
+        <li>Frame both eyes (or one eye) so the iris is fully visible</li>
+        <li>Verify and adjust the auto-detected pupil and iris circles</li>
         <li>Review side-by-side comparison and clinical assessment</li>
       </ol>
     </div>
@@ -78,6 +78,21 @@
         + Reactivity
         <small>Test light response</small>
       </button>
+    </div>
+
+    <div class="capture-mode-toggle" role="group" aria-label="Capture mode">
+        <button id="captureBoth" class="active" type="button"
+                aria-pressed="true"
+                onclick="Measurement.setCaptureMode('both')">
+            Both Eyes
+            <small>Single landscape photo</small>
+        </button>
+        <button id="captureSingle" type="button"
+                aria-pressed="false"
+                onclick="Measurement.setCaptureMode('single')">
+            Single Eye
+            <small>Sequential photos</small>
+        </button>
     </div>
 
     <div id="mlStatus" class="ml-status" aria-live="polite" style="display:none;text-align:center;margin:12px 0;font-size:12px;color:var(--text-muted);"></div>
@@ -227,6 +242,121 @@
   </div>
 
   <!-- ================================================================
+       Screen 3b: Dual-Eye Measurement / Adjustment (Both Eyes mode)
+       ================================================================ -->
+  <div class="screen" id="screenMeasureDual">
+    <div class="dual-phase-label" id="dualPhaseLabel" aria-live="polite">Both Eyes</div>
+
+    <div class="dual-canvas-row">
+        <div class="dual-eye-panel" id="dualPanelRight" tabindex="0"
+             onclick="Measurement.selectDualEye('right')"
+             role="button" aria-label="Select right eye for adjustment">
+            <div class="eye-label right">Right (OD)</div>
+            <canvas id="dualCanvasRight" width="300" height="300"
+                    aria-label="Right eye measurement canvas"></canvas>
+        </div>
+        <div class="dual-eye-panel" id="dualPanelLeft" tabindex="0"
+             onclick="Measurement.selectDualEye('left')"
+             role="button" aria-label="Select left eye for adjustment">
+            <div class="eye-label left">Left (OS)</div>
+            <canvas id="dualCanvasLeft" width="300" height="300"
+                    aria-label="Left eye measurement canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="dual-selected-indicator" id="dualSelectedLabel">Tap an eye to adjust</div>
+
+    <div class="circle-toggle" role="group" aria-label="Select circle to adjust">
+        <button id="dualTogglePupil" class="active" type="button"
+                onclick="Measurement.selectCircleDual('pupil')"
+                aria-pressed="true">Pupil (inner)</button>
+        <button id="dualToggleIris" type="button"
+                onclick="Measurement.selectCircleDual('iris')"
+                aria-pressed="false">Iris (outer)</button>
+    </div>
+
+    <div class="slider-group" role="group" aria-label="Circle position and size controls">
+        <label for="dualSliderX"><span>Circle X</span> <span id="dualSliderXValue">-</span></label>
+        <input type="range" id="dualSliderX" min="0" max="500"
+               oninput="Measurement.onDualSliderChange()"
+               aria-label="Horizontal position">
+
+        <label for="dualSliderY"><span>Circle Y</span> <span id="dualSliderYValue">-</span></label>
+        <input type="range" id="dualSliderY" min="0" max="500"
+               oninput="Measurement.onDualSliderChange()"
+               aria-label="Vertical position">
+
+        <label for="dualSliderR"><span>Circle Radius</span> <span id="dualSliderRValue">-</span></label>
+        <input type="range" id="dualSliderR" min="5" max="250"
+               oninput="Measurement.onDualSliderChange()"
+               aria-label="Circle radius">
+    </div>
+
+    <div class="dual-stats" id="dualStats" aria-live="polite">
+        <div class="dual-stat-row">
+            <div class="dual-stat-eye">
+                <span class="label">Right (OD)</span>
+                <span class="value" id="dualRightRatio">-</span>
+                <span class="sub" id="dualRightMm">-</span>
+            </div>
+            <div class="dual-stat-eye">
+                <span class="label">Left (OS)</span>
+                <span class="value" id="dualLeftRatio">-</span>
+                <span class="sub" id="dualLeftMm">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-secondary" type="button"
+                onclick="Measurement.retakePhotoDual()"
+                aria-label="Retake the photo">Retake</button>
+        <button class="btn btn-success" type="button"
+                onclick="Measurement.confirmDual()"
+                aria-label="Confirm both measurements">Confirm Both</button>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       Screen 3c: Reactivity Light Stimulus Guide
+       ================================================================ -->
+  <div class="screen" id="screenReactivityGuide">
+    <div class="reactivity-guide">
+        <div class="guide-icon" aria-hidden="true">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="20" r="8" fill="var(--warning)" opacity="0.8"/>
+                <line x1="32" y1="28" x2="32" y2="48" stroke="var(--warning)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="20" y1="20" x2="12" y2="14" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                <line x1="44" y1="20" x2="52" y2="14" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                <line x1="20" y1="30" x2="10" y2="34" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                <line x1="44" y1="30" x2="54" y2="34" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            </svg>
+        </div>
+        <h3>Light Stimulus</h3>
+        <p>Apply a light stimulus to the patient's eyes to test pupil reactivity.</p>
+
+        <div class="guide-options">
+            <div class="guide-option" id="guideTorchOption">
+                <strong>Phone torch</strong>
+                <p>Torch will activate. Hold phone <strong>20-30 cm</strong> from the face to avoid blinding the patient.</p>
+            </div>
+            <div class="guide-option">
+                <strong>Penlight (recommended)</strong>
+                <p>Shine a penlight from the side into both eyes. This is the standard clinical technique.</p>
+            </div>
+        </div>
+
+        <p class="guide-tip">Keep the light on while you capture. Maintain the same distance as the first photo.</p>
+    </div>
+    <button class="btn btn-primary" type="button"
+            onclick="Measurement.openCameraReactivityLight()"
+            aria-label="Ready to capture with light stimulus">Ready to Capture</button>
+    <button class="btn btn-secondary" type="button"
+            onclick="Measurement.goBack()"
+            aria-label="Go back">Cancel</button>
+  </div>
+
+  <!-- ================================================================
        Screen 4: Results
        ================================================================ -->
   <div class="screen" id="screenResults">
@@ -355,6 +485,7 @@
   <!-- JS Modules -->
   <script src="js/i18n.js"></script>
   <script src="js/patient-store.js"></script>
+  <script src="js/detection-preprocess.js"></script>
   <script src="js/detection-classical.js"></script>
   <script src="js/detection-ml.js"></script>
   <script src="js/detection-cloud.js"></script>

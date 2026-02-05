@@ -1,7 +1,7 @@
 {
     "appName": "PupilCheck",
     "tagline": "Klinisches Pupillen-Beurteilungstool",
-    "version": "v2.0",
+    "version": "v2.1",
 
     "hub.newMeasurement": "Neue Messung",
     "hub.newMeasurementDesc": "Pupillengröße und Lichtreaktion erfassen und analysieren",
@@ -47,6 +47,23 @@
     "measure.torchOff": "Licht aus",
     "measure.torchNotAvailable": "Taschenlampe auf diesem Gerät nicht verfügbar",
     "measure.zoom": "Zoom",
+    "measure.bothEyes": "Beide Augen",
+    "measure.bothEyesDesc": "Ein Querformat-Foto",
+    "measure.singleEye": "Einzelnes Auge",
+    "measure.singleEyeDesc": "Nacheinander Nahaufnahmen",
+    "measure.confirmBoth": "Beide bestätigen",
+    "measure.tapToAdjust": "Auge antippen zum Anpassen",
+    "measure.analyzingBothML": "Beide Augen mit ML analysieren...",
+    "measure.analyzingBothClassical": "Pupillen werden erkannt...",
+
+    "reactivity.guide.title": "Lichtreiz",
+    "reactivity.guide.description": "Lichtreiz auf die Augen des Patienten anwenden, um die Pupillenreaktion zu testen.",
+    "reactivity.guide.torch": "Handy-Taschenlampe",
+    "reactivity.guide.torchDesc": "Die Taschenlampe wird aktiviert. Halten Sie das Handy 20-30 cm vom Gesicht entfernt.",
+    "reactivity.guide.penlight": "Pupillenleuchte (empfohlen)",
+    "reactivity.guide.penlightDesc": "Leuchten Sie seitlich mit einer Pupillenleuchte in beide Augen. Dies ist die klinische Standardtechnik.",
+    "reactivity.guide.tip": "Licht während der Aufnahme anlassen. Gleichen Abstand wie beim ersten Foto einhalten.",
+    "reactivity.guide.ready": "Bereit zur Aufnahme",
 
     "reactivity.darkPhase": "Dunkelphase",
     "reactivity.lightPhase": "Lichtphase",
@@ -146,5 +163,5 @@
 
     "about.aboutTitle": "Über PupilCheck",
     "about.aboutDesc": "PupilCheck ist eine progressive Web-App zur klinischen Pupillenbeurteilung. Sie nutzt Computer Vision und optionales maschinelles Lernen zur Messung von Pupillengröße und Lichtreaktion am Patientenbett.",
-    "about.version": "Version 2.0"
+    "about.version": "Version 2.1"
 }
