@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pupil-measure-v2';
+const CACHE_NAME = 'pupil-measure-v3';
 const ASSETS = [
   './',
   './index.html',

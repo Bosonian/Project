@@ -800,7 +800,7 @@
 <!-- Processing Overlay -->
 <div class="processing-overlay" id="processingOverlay">
     <div class="spinner"></div>
-    <div style="color: var(--text-muted); font-size: 14px;">Detecting pupil...</div>
+    <div id="processingText" style="color: var(--text-muted); font-size: 14px;">Detecting pupil...</div>
 </div>
 
 <!-- Screen 1: Welcome -->
@@ -839,6 +839,11 @@
             + Reactivity
             <small>Test light response</small>
         </button>
+    </div>
+
+    <div id="cloudStatus" style="text-align:center; margin: 12px 0; font-size: 12px; color: var(--text-muted); display: none;">
+        <span id="cloudStatusDot" style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle;"></span>
+        <span id="cloudStatusText"></span>
     </div>
 
     <button class="btn btn-primary" onclick="startMeasurement()">Begin Measurement</button>
@@ -1012,6 +1017,11 @@ const EMPTY_EYE = () => ({
     torchOn: false       // was torch on during this capture?
 });
 
+// Cloud detection endpoint (set after deploying to Cloud Run)
+// Example: 'https://pupil-detection-xxxx-uc.a.run.app'
+const CLOUD_DETECT_URL = '';  // Set your Cloud Run URL here
+const CLOUD_TIMEOUT_MS = 5000; // Timeout for cloud requests
+
 const state = {
     currentEye: 'left', // 'left' or 'right'
     irisRefMm: 11.7, // population average, for approximate mm estimates only
@@ -1025,6 +1035,7 @@ const state = {
     capturedImage: null, // ImageData
     capturedWidth: 0,
     capturedHeight: 0,
+    cloudAvailable: null, // null=unknown, true/false after first attempt
     left: EMPTY_EYE(),
     right: EMPTY_EYE(),
     // Reactivity mode stores a second measurement per eye (with light)
@@ -1618,27 +1629,189 @@ function processAndShowMeasurement(storeKey) {
     const overlay = document.getElementById('processingOverlay');
     overlay.classList.add('active');
 
-    // Use requestAnimationFrame to let the overlay render before heavy computation
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            try {
-                doDetection(state._currentStoreKey);
-            } catch (e) {
-                console.error('Detection error:', e);
-                // Fallback circles
-                const w = state.capturedWidth;
-                const h = state.capturedHeight;
-                const eyeData = state[state._currentStoreKey];
-                eyeData.pupil = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.06) };
-                eyeData.iris = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.2) };
-            }
-            overlay.classList.remove('active');
-            showMeasurementScreen();
-        }, 50);
-    });
+    // Try cloud detection first (async), fall back to classical CV
+    const finalize = () => {
+        overlay.classList.remove('active');
+        showMeasurementScreen();
+    };
+
+    const runClassicalDetection = () => {
+        try {
+            doClassicalDetection(state._currentStoreKey);
+        } catch (e) {
+            console.error('Detection error:', e);
+            const w = state.capturedWidth;
+            const h = state.capturedHeight;
+            const eyeData = state[state._currentStoreKey];
+            eyeData.pupil = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.06) };
+            eyeData.iris = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.2) };
+        }
+    };
+
+    const procText = document.getElementById('processingText');
+
+    // If cloud endpoint is configured and not known to be down, try it
+    if (CLOUD_DETECT_URL && state.cloudAvailable !== false) {
+        procText.textContent = 'Analyzing with cloud ML...';
+        doCloudDetection(state._currentStoreKey)
+            .then(success => {
+                if (!success) {
+                    // Cloud failed, use classical
+                    procText.textContent = 'Falling back to classical detection...';
+                    requestAnimationFrame(() => setTimeout(() => {
+                        runClassicalDetection();
+                        finalize();
+                    }, 10));
+                } else {
+                    finalize();
+                }
+            })
+            .catch(() => {
+                procText.textContent = 'Falling back to classical detection...';
+                requestAnimationFrame(() => setTimeout(() => {
+                    runClassicalDetection();
+                    finalize();
+                }, 10));
+            });
+    } else {
+        // No cloud endpoint or cloud is down, use classical CV
+        procText.textContent = 'Detecting pupil...';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                runClassicalDetection();
+                finalize();
+            }, 50);
+        });
+    }
 }
 
-function doDetection(storeKey) {
+// Cloud-based ML detection
+async function doCloudDetection(storeKey) {
+    const key = storeKey || state.currentEye;
+    const w = state.capturedWidth;
+    const h = state.capturedHeight;
+
+    try {
+        // Convert captured ImageData to JPEG base64
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.putImageData(state.capturedImage, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        // Send to cloud endpoint with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CLOUD_TIMEOUT_MS);
+
+        const response = await fetch(CLOUD_DETECT_URL + '/detect/base64', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: dataUrl }),
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            console.warn('Cloud detection HTTP error:', response.status);
+            state.cloudAvailable = false;
+            return false;
+        }
+
+        const result = await response.json();
+        state.cloudAvailable = true;
+
+        // Validate response has needed fields
+        if (!result.pupil || !result.iris) {
+            console.warn('Cloud detection: incomplete result', result);
+            return false;
+        }
+
+        // Low confidence → fall back to classical
+        if (result.confidence && result.confidence.pupil < 0.3) {
+            console.warn('Cloud detection: low confidence', result.confidence);
+            return false;
+        }
+
+        // Apply results
+        const eyeData = state[key];
+        eyeData.pupil = {
+            x: Math.round(result.pupil.x),
+            y: Math.round(result.pupil.y),
+            r: Math.round(result.pupil.radius),
+        };
+        eyeData.iris = {
+            x: Math.round(result.iris.x),
+            y: Math.round(result.iris.y),
+            r: Math.round(result.iris.radius),
+        };
+        eyeData.image = state.capturedImage;
+
+        console.log(`Cloud detection OK (${result.inference_ms}ms, conf: pupil=${result.confidence.pupil}, iris=${result.confidence.iris})`);
+        return true;
+
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            console.warn('Cloud detection timed out');
+        } else {
+            console.warn('Cloud detection error:', e.message);
+        }
+        state.cloudAvailable = false;
+        return false;
+    }
+}
+
+// Check cloud service availability on startup
+async function checkCloudStatus() {
+    const statusEl = document.getElementById('cloudStatus');
+    const dotEl = document.getElementById('cloudStatusDot');
+    const textEl = document.getElementById('cloudStatusText');
+
+    if (!CLOUD_DETECT_URL) {
+        // No cloud endpoint configured - show offline mode
+        statusEl.style.display = 'block';
+        dotEl.style.background = 'var(--text-muted)';
+        textEl.textContent = 'Detection: Classical CV (offline)';
+        return;
+    }
+
+    statusEl.style.display = 'block';
+    dotEl.style.background = 'var(--warning)';
+    textEl.textContent = 'Checking cloud detection...';
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const resp = await fetch(CLOUD_DETECT_URL + '/health', {
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.model_loaded) {
+                state.cloudAvailable = true;
+                dotEl.style.background = 'var(--success)';
+                textEl.textContent = 'Detection: Cloud ML (connected)';
+            } else {
+                state.cloudAvailable = false;
+                dotEl.style.background = 'var(--warning)';
+                textEl.textContent = 'Detection: Classical CV (model loading)';
+            }
+        } else {
+            state.cloudAvailable = false;
+            dotEl.style.background = 'var(--text-muted)';
+            textEl.textContent = 'Detection: Classical CV (cloud unavailable)';
+        }
+    } catch (e) {
+        state.cloudAvailable = false;
+        dotEl.style.background = 'var(--text-muted)';
+        textEl.textContent = 'Detection: Classical CV (offline)';
+    }
+}
+
+// Classical computer vision detection (offline fallback)
+function doClassicalDetection(storeKey) {
     const key = storeKey || state.currentEye;
     const w = state.capturedWidth;
     const h = state.capturedHeight;
@@ -2282,6 +2455,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(reg => console.log('SW registered:', reg.scope))
             .catch(err => console.log('SW registration failed:', err));
     }
+
+    // Check cloud detection availability
+    checkCloudStatus();
 });
 </script>
 </body>
