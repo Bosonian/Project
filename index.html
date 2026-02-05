@@ -550,6 +550,103 @@
             margin-top: 4px;
         }
 
+        /* Torch button */
+        .torch-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .torch-btn.on {
+            border-color: var(--warning);
+            background: rgba(255, 165, 2, 0.15);
+            color: var(--warning);
+        }
+
+        .torch-btn .torch-icon {
+            font-size: 18px;
+        }
+
+        .torch-unavailable {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 4px;
+            opacity: 0.6;
+        }
+
+        /* Reactivity mode toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mode-toggle button {
+            flex: 1;
+            padding: 12px 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-toggle button.active {
+            border-color: var(--primary);
+            color: var(--text);
+            background: rgba(233, 69, 96, 0.15);
+        }
+
+        .mode-toggle button small {
+            display: block;
+            font-weight: 400;
+            font-size: 11px;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+
+        /* Reactivity results */
+        .reactivity-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .reactivity-card h4 {
+            font-size: 13px;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+
+        .reactivity-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .reactivity-row:last-child { border-bottom: none; }
+
+        .reactivity-row .label { color: var(--text-muted); }
+        .reactivity-row .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
         /* Loading/processing overlay */
         .processing-overlay {
             position: fixed;
@@ -612,6 +709,85 @@
         @media (orientation: landscape) {
             .orientation-hint { display: block; }
         }
+
+        /* Zoom control */
+        .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
+
+        .zoom-control label {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .zoom-control input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 6px;
+            background: var(--bg);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .zoom-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .zoom-control input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .zoom-control .zoom-value {
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .zoom-presets {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .zoom-presets button {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .zoom-presets button.active {
+            border-color: var(--primary);
+            color: var(--text);
+            background: rgba(233, 69, 96, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -651,7 +827,18 @@
         <strong>Clinical Tip:</strong> Hold the phone 10-15 cm from the eye.
         Ensure the entire iris is visible in the frame.
         The iris is used as an internal ruler, so exact camera distance does not matter.
-        Works in both bright and dim lighting.
+        Use the torch for standardized lighting and reactivity testing.
+    </div>
+
+    <div class="mode-toggle">
+        <button id="modeSize" class="active" onclick="setMode('size')">
+            Size Only
+            <small>Compare pupil sizes</small>
+        </button>
+        <button id="modeReactivity" onclick="setMode('reactivity')">
+            + Reactivity
+            <small>Test light response</small>
+        </button>
     </div>
 
     <button class="btn btn-primary" onclick="startMeasurement()">Begin Measurement</button>
@@ -668,9 +855,30 @@
         <div class="camera-guide-text">Position eye within the oval</div>
     </div>
 
+    <div class="zoom-control" id="zoomControl" style="display:none">
+        <label>Zoom</label>
+        <input type="range" id="zoomSlider" min="1" max="5" step="0.1" value="1" oninput="onZoomChange()">
+        <span class="zoom-value" id="zoomValue">1.0x</span>
+    </div>
+    <div class="zoom-presets" id="zoomPresets" style="display:none">
+        <button onclick="setZoom(1)" class="active" data-zoom="1">1x</button>
+        <button onclick="setZoom(2)" data-zoom="2">2x</button>
+        <button onclick="setZoom(3)" data-zoom="3">3x</button>
+        <button onclick="setZoom(5)" data-zoom="5">5x</button>
+    </div>
+
+    <div id="torchControl">
+        <button class="torch-btn" id="torchBtn" onclick="toggleTorch()">
+            <span class="torch-icon" id="torchIcon">&#128294;</span>
+            <span id="torchLabel">Torch OFF</span>
+        </button>
+    </div>
+
+    <div id="captureInstruction" style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:10px;min-height:20px;"></div>
+
     <div class="camera-controls">
         <button class="btn btn-secondary" onclick="switchCamera()">Flip Camera</button>
-        <button class="btn btn-primary" onclick="captureImage()">Capture</button>
+        <button class="btn btn-primary" id="captureBtn" onclick="captureImage()">Capture</button>
     </div>
 
     <button class="btn btn-secondary" onclick="goBack()">Back</button>
@@ -760,6 +968,14 @@
         </div>
     </div>
 
+    <!-- Reactivity results (shown only in reactivity mode) -->
+    <div id="reactivitySection" style="display:none">
+        <div class="reactivity-card">
+            <h4>Pupil Reactivity to Light</h4>
+            <div id="reactivityData"></div>
+        </div>
+    </div>
+
     <div class="clinical-notes">
         <h3>Clinical Considerations</h3>
         <ul id="clinicalNotes">
@@ -786,31 +1002,34 @@
 // ============================================================
 // STATE
 // ============================================================
+const EMPTY_EYE = () => ({
+    image: null,
+    pupil: null, // { x, y, r }
+    iris: null,  // { x, y, r }
+    pupilMm: null,
+    ratio: null,
+    focusDistance: null, // meters, from camera API if available
+    torchOn: false       // was torch on during this capture?
+});
+
 const state = {
     currentEye: 'left', // 'left' or 'right'
     irisRefMm: 11.7, // population average, for approximate mm estimates only
     facingMode: 'environment',
     stream: null,
+    torchOn: false,
+    torchSupported: false,
+    mode: 'size', // 'size' or 'reactivity'
+    reactivityPhase: 'dark', // 'dark' or 'light' (which capture we're on)
     selectedCircle: 'pupil', // 'pupil' or 'iris'
     capturedImage: null, // ImageData
     capturedWidth: 0,
     capturedHeight: 0,
-    left: {
-        image: null,
-        pupil: null, // { x, y, r }
-        iris: null,  // { x, y, r }
-        pupilMm: null,
-        ratio: null,
-        focusDistance: null // meters, from camera API if available
-    },
-    right: {
-        image: null,
-        pupil: null,
-        iris: null,
-        pupilMm: null,
-        ratio: null,
-        focusDistance: null
-    }
+    left: EMPTY_EYE(),
+    right: EMPTY_EYE(),
+    // Reactivity mode stores a second measurement per eye (with light)
+    leftLight: EMPTY_EYE(),
+    rightLight: EMPTY_EYE()
 };
 
 // ============================================================
@@ -821,9 +1040,16 @@ function showScreen(id) {
     document.getElementById(id).classList.add('active');
 }
 
+function setMode(mode) {
+    state.mode = mode;
+    document.getElementById('modeSize').classList.toggle('active', mode === 'size');
+    document.getElementById('modeReactivity').classList.toggle('active', mode === 'reactivity');
+}
+
 function startMeasurement() {
-    state.irisRefMm = 11.7; // population average, used only for approximate mm estimates
+    state.irisRefMm = 11.7;
     state.currentEye = 'left';
+    state.reactivityPhase = state.mode === 'reactivity' ? 'dark' : 'dark';
     openCamera();
 }
 
@@ -833,14 +1059,21 @@ function goBack() {
 }
 
 function startOver() {
-    state.left = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
-    state.right = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
+    state.left = EMPTY_EYE();
+    state.right = EMPTY_EYE();
+    state.leftLight = EMPTY_EYE();
+    state.rightLight = EMPTY_EYE();
+    state.torchOn = false;
     showScreen('screenWelcome');
 }
 
 function remeasureEye(eye) {
     state.currentEye = eye;
-    state[eye] = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
+    state[eye] = EMPTY_EYE();
+    if (state.mode === 'reactivity') {
+        state[eye + 'Light'] = EMPTY_EYE();
+        state.reactivityPhase = 'dark';
+    }
     openCamera();
 }
 
@@ -857,6 +1090,7 @@ async function openCamera() {
         if (state.stream) {
             state.stream.getTracks().forEach(t => t.stop());
         }
+        state.torchOn = false;
         const constraints = {
             video: {
                 facingMode: state.facingMode,
@@ -868,6 +1102,25 @@ async function openCamera() {
         const video = document.getElementById('cameraVideo');
         video.srcObject = state.stream;
         await video.play();
+
+        // Check torch support
+        state.torchSupported = false;
+        try {
+            const track = state.stream.getVideoTracks()[0];
+            if (track) {
+                const caps = track.getCapabilities();
+                state.torchSupported = caps.torch === true;
+            }
+        } catch (e) { /* torch check not supported */ }
+
+        updateTorchUI();
+        initZoomControl();
+        updateCaptureInstruction();
+
+        // In reactivity mode with light phase, auto-enable torch
+        if (state.mode === 'reactivity' && state.reactivityPhase === 'light' && state.torchSupported) {
+            await setTorch(true);
+        }
     } catch (err) {
         alert('Camera access denied or unavailable. Please allow camera permissions and try again.\n\nError: ' + err.message);
         showScreen('screenWelcome');
@@ -884,6 +1137,143 @@ function stopCamera() {
 async function switchCamera() {
     state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
     await openCamera();
+}
+
+// ============================================================
+// TORCH CONTROL
+// ============================================================
+async function setTorch(on) {
+    if (!state.stream) return;
+    try {
+        const track = state.stream.getVideoTracks()[0];
+        if (track) {
+            await track.applyConstraints({ advanced: [{ torch: on }] });
+            state.torchOn = on;
+            updateTorchUI();
+        }
+    } catch (e) {
+        console.log('Torch control failed:', e);
+        state.torchSupported = false;
+        updateTorchUI();
+    }
+}
+
+async function toggleTorch() {
+    await setTorch(!state.torchOn);
+}
+
+function updateTorchUI() {
+    const btn = document.getElementById('torchBtn');
+    const label = document.getElementById('torchLabel');
+    const icon = document.getElementById('torchIcon');
+    const control = document.getElementById('torchControl');
+
+    if (!state.torchSupported) {
+        // Hide torch button if not supported, show note
+        control.innerHTML = '<div class="torch-unavailable">Torch not available (use rear camera or a supported browser)</div>';
+        return;
+    }
+
+    // Restore button if it was replaced with the unavailable note
+    if (!document.getElementById('torchBtn')) {
+        control.innerHTML = '<button class="torch-btn" id="torchBtn" onclick="toggleTorch()">' +
+            '<span class="torch-icon" id="torchIcon">&#128294;</span>' +
+            '<span id="torchLabel">Torch OFF</span></button>';
+    }
+
+    const btnEl = document.getElementById('torchBtn');
+    const labelEl = document.getElementById('torchLabel');
+    btnEl.classList.toggle('on', state.torchOn);
+    labelEl.textContent = state.torchOn ? 'Torch ON' : 'Torch OFF';
+}
+
+function updateCaptureInstruction() {
+    const el = document.getElementById('captureInstruction');
+    if (state.mode === 'reactivity') {
+        if (state.reactivityPhase === 'dark') {
+            el.innerHTML = '<strong>Step 1:</strong> Capture in ambient light (torch off)';
+        } else {
+            el.innerHTML = '<strong>Step 2:</strong> Capture with torch light (observe constriction)';
+        }
+    } else {
+        el.textContent = '';
+    }
+}
+
+// ============================================================
+// ZOOM CONTROL
+// ============================================================
+function initZoomControl() {
+    const zoomControl = document.getElementById('zoomControl');
+    const zoomPresets = document.getElementById('zoomPresets');
+    if (!state.stream) {
+        zoomControl.style.display = 'none';
+        zoomPresets.style.display = 'none';
+        return;
+    }
+
+    try {
+        const track = state.stream.getVideoTracks()[0];
+        if (!track) return;
+        const caps = track.getCapabilities();
+
+        if (caps.zoom) {
+            const minZoom = caps.zoom.min || 1;
+            const maxZoom = Math.min(caps.zoom.max || 1, 10);
+            const slider = document.getElementById('zoomSlider');
+            slider.min = minZoom;
+            slider.max = maxZoom;
+            slider.step = (maxZoom - minZoom) > 5 ? 0.5 : 0.1;
+            slider.value = track.getSettings().zoom || 1;
+            document.getElementById('zoomValue').textContent = parseFloat(slider.value).toFixed(1) + 'x';
+
+            zoomControl.style.display = 'flex';
+            // Show preset buttons, hiding any that exceed max zoom
+            zoomPresets.style.display = 'flex';
+            zoomPresets.querySelectorAll('button').forEach(btn => {
+                const z = parseFloat(btn.dataset.zoom);
+                btn.style.display = z <= maxZoom ? '' : 'none';
+                btn.classList.toggle('active', Math.abs(z - parseFloat(slider.value)) < 0.15);
+            });
+        } else {
+            zoomControl.style.display = 'none';
+            zoomPresets.style.display = 'none';
+        }
+    } catch (e) {
+        zoomControl.style.display = 'none';
+        zoomPresets.style.display = 'none';
+    }
+}
+
+async function onZoomChange() {
+    const val = parseFloat(document.getElementById('zoomSlider').value);
+    document.getElementById('zoomValue').textContent = val.toFixed(1) + 'x';
+    await applyZoom(val);
+    // Update preset button states
+    document.querySelectorAll('#zoomPresets button').forEach(btn => {
+        btn.classList.toggle('active', Math.abs(parseFloat(btn.dataset.zoom) - val) < 0.15);
+    });
+}
+
+async function setZoom(level) {
+    document.getElementById('zoomSlider').value = level;
+    document.getElementById('zoomValue').textContent = level.toFixed(1) + 'x';
+    await applyZoom(level);
+    document.querySelectorAll('#zoomPresets button').forEach(btn => {
+        btn.classList.toggle('active', Math.abs(parseFloat(btn.dataset.zoom) - level) < 0.15);
+    });
+}
+
+async function applyZoom(level) {
+    if (!state.stream) return;
+    try {
+        const track = state.stream.getVideoTracks()[0];
+        if (track) {
+            await track.applyConstraints({ advanced: [{ zoom: level }] });
+        }
+    } catch (e) {
+        console.log('Zoom control failed:', e);
+    }
 }
 
 function captureImage() {
@@ -919,10 +1309,15 @@ function captureImage() {
     } catch (e) {
         // Focus distance not available on this device/browser
     }
-    state[state.currentEye].focusDistance = focusDist;
+    // Determine storage key based on reactivity mode
+    const storeKey = (state.mode === 'reactivity' && state.reactivityPhase === 'light')
+        ? state.currentEye + 'Light'
+        : state.currentEye;
+    state[storeKey].focusDistance = focusDist;
+    state[storeKey].torchOn = state.torchOn;
 
     stopCamera();
-    processAndShowMeasurement();
+    processAndShowMeasurement(storeKey);
 }
 
 // ============================================================
@@ -1218,7 +1613,8 @@ function detectIris(gray, w, h, pupil) {
 // ============================================================
 // MEASUREMENT SCREEN
 // ============================================================
-function processAndShowMeasurement() {
+function processAndShowMeasurement(storeKey) {
+    state._currentStoreKey = storeKey || state.currentEye;
     const overlay = document.getElementById('processingOverlay');
     overlay.classList.add('active');
 
@@ -1226,13 +1622,13 @@ function processAndShowMeasurement() {
     requestAnimationFrame(() => {
         setTimeout(() => {
             try {
-                doDetection();
+                doDetection(state._currentStoreKey);
             } catch (e) {
                 console.error('Detection error:', e);
                 // Fallback circles
                 const w = state.capturedWidth;
                 const h = state.capturedHeight;
-                const eyeData = state[state.currentEye];
+                const eyeData = state[state._currentStoreKey];
                 eyeData.pupil = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.06) };
                 eyeData.iris = { x: Math.round(w / 2), y: Math.round(h / 2), r: Math.round(Math.min(w, h) * 0.2) };
             }
@@ -1242,7 +1638,8 @@ function processAndShowMeasurement() {
     });
 }
 
-function doDetection() {
+function doDetection(storeKey) {
+    const key = storeKey || state.currentEye;
     const w = state.capturedWidth;
     const h = state.capturedHeight;
     const gray = toGrayscale(state.capturedImage);
@@ -1273,26 +1670,28 @@ function doDetection() {
     let iris = detectIris(gray, w, h, pupil);
 
     // Sanity checks
-    // Pupil should be smaller than iris
     if (pupil.r >= iris.r * 0.95) {
         pupil.r = Math.round(iris.r * 0.4);
     }
-    // Iris shouldn't be too large relative to image
     if (iris.r > Math.min(w, h) * 0.45) {
         iris.r = Math.round(Math.min(w, h) * 0.35);
     }
-    // Minimum pupil size
     if (pupil.r < 5) pupil.r = Math.round(Math.min(w, h) * 0.04);
 
-    const eyeData = state[state.currentEye];
+    const eyeData = state[key];
     eyeData.pupil = pupil;
     eyeData.iris = iris;
     eyeData.image = state.capturedImage;
 }
 
+function currentKey() {
+    return state._currentStoreKey || state.currentEye;
+}
+
 function showMeasurementScreen() {
     const label = state.currentEye === 'left' ? 'Left Eye (OS)' : 'Right Eye (OD)';
-    document.getElementById('measureEyeLabel').textContent = label;
+    const phase = (state.mode === 'reactivity' && state.reactivityPhase === 'light') ? ' (with light)' : '';
+    document.getElementById('measureEyeLabel').textContent = label + phase;
     document.getElementById('measureEyeLabel').className = 'eye-label ' + state.currentEye;
 
     showScreen('screenMeasure');
@@ -1310,7 +1709,7 @@ function selectCircle(which) {
 }
 
 function updateSliders() {
-    const eyeData = state[state.currentEye];
+    const eyeData = state[currentKey()];
     const circle = state.selectedCircle === 'pupil' ? eyeData.pupil : eyeData.iris;
     if (!circle) return;
 
@@ -1332,7 +1731,7 @@ function updateSliders() {
 }
 
 function onSliderChange() {
-    const eyeData = state[state.currentEye];
+    const eyeData = state[currentKey()];
     const circle = state.selectedCircle === 'pupil' ? eyeData.pupil : eyeData.iris;
     if (!circle) return;
 
@@ -1350,7 +1749,7 @@ function onSliderChange() {
 
 function drawMeasurement() {
     const canvas = document.getElementById('measureCanvas');
-    const eyeData = state[state.currentEye];
+    const eyeData = state[currentKey()];
     if (!eyeData.image) return;
 
     const w = state.capturedWidth;
@@ -1420,7 +1819,7 @@ function drawMeasurement() {
 }
 
 function updateLiveStats() {
-    const eyeData = state[state.currentEye];
+    const eyeData = state[currentKey()];
     if (!eyeData.pupil || !eyeData.iris) return;
 
     const pupilDiaPx = eyeData.pupil.r * 2;
@@ -1445,12 +1844,13 @@ function updateLiveStats() {
 }
 
 function retakePhoto() {
-    state[state.currentEye] = { image: null, pupil: null, iris: null, pupilMm: null, ratio: null, focusDistance: null };
+    state[currentKey()] = EMPTY_EYE();
     openCamera();
 }
 
 function confirmMeasurement() {
-    const eyeData = state[state.currentEye];
+    const key = currentKey();
+    const eyeData = state[key];
     const pupilDiaPx = eyeData.pupil.r * 2;
     const irisDiaPx = eyeData.iris.r * 2;
     eyeData.ratio = pupilDiaPx / irisDiaPx;
@@ -1461,13 +1861,28 @@ function confirmMeasurement() {
     eyeData.imageWidth = state.capturedWidth;
     eyeData.imageHeight = state.capturedHeight;
 
-    if (state.currentEye === 'left') {
-        // Move to right eye
-        state.currentEye = 'right';
+    // Determine next step
+    if (state.mode === 'reactivity' && state.reactivityPhase === 'dark') {
+        // Need to capture the same eye with light
+        state.reactivityPhase = 'light';
         openCamera();
+    } else if (state.mode === 'reactivity' && state.reactivityPhase === 'light') {
+        // Done with this eye's reactivity test
+        if (state.currentEye === 'left') {
+            state.currentEye = 'right';
+            state.reactivityPhase = 'dark';
+            openCamera();
+        } else {
+            showResults();
+        }
     } else {
-        // Both eyes measured, show results
-        showResults();
+        // Size-only mode
+        if (state.currentEye === 'left') {
+            state.currentEye = 'right';
+            openCamera();
+        } else {
+            showResults();
+        }
     }
 }
 
@@ -1493,7 +1908,7 @@ function confirmMeasurement() {
     }
 
     function hitTest(pos) {
-        const eyeData = state[state.currentEye];
+        const eyeData = state[currentKey()];
         if (!eyeData.pupil || !eyeData.iris) return null;
 
         // Check pupil edge (resize)
@@ -1537,7 +1952,7 @@ function confirmMeasurement() {
         const dy = pos.y - lastPos.y;
         lastPos = pos;
 
-        const eyeData = state[state.currentEye];
+        const eyeData = state[currentKey()];
 
         if (dragTarget === 'pupil-move') {
             eyeData.pupil.x = Math.round(eyeData.pupil.x + dx);
@@ -1684,6 +2099,82 @@ function showResults() {
 
     if (Math.min(left.pupilMm, right.pupilMm) < 2) {
         notes.push('<strong>Note:</strong> Very small pupil detected. Consider opioid use, Horner syndrome, or pharmacological miosis');
+    }
+
+    // Reactivity section (only in reactivity mode)
+    const reactivitySection = document.getElementById('reactivitySection');
+    if (state.mode === 'reactivity') {
+        const ll = state.leftLight;
+        const rl = state.rightLight;
+
+        if (ll.ratio !== null && rl.ratio !== null) {
+            reactivitySection.style.display = '';
+
+            // Constriction = dark ratio - light ratio (positive = pupil got smaller = reactive)
+            const leftConstriction = left.ratio - ll.ratio;
+            const rightConstriction = right.ratio - rl.ratio;
+            const leftConstrMm = leftConstriction * state.irisRefMm;
+            const rightConstrMm = rightConstriction * state.irisRefMm;
+            const leftPct = left.ratio > 0 ? (leftConstriction / left.ratio) * 100 : 0;
+            const rightPct = right.ratio > 0 ? (rightConstriction / right.ratio) * 100 : 0;
+
+            // Determine reactivity status
+            function reactivityLabel(constrPct) {
+                if (constrPct > 15) return { text: 'Brisk', color: 'var(--success)' };
+                if (constrPct > 5) return { text: 'Sluggish', color: 'var(--warning)' };
+                if (constrPct > 0) return { text: 'Minimal', color: 'var(--warning)' };
+                return { text: 'Fixed / Non-reactive', color: 'var(--danger)' };
+            }
+
+            const leftLabel = reactivityLabel(leftPct);
+            const rightLabel = reactivityLabel(rightPct);
+
+            let html = '';
+
+            // Left eye reactivity
+            html += '<div style="margin-bottom:10px"><strong style="color:var(--primary-light)">Left Eye (OS)</strong></div>';
+            html += '<div class="reactivity-row"><span class="label">Dark ratio</span><span class="value">' + left.ratio.toFixed(3) + ' (~' + left.pupilMm.toFixed(1) + ' mm)</span></div>';
+            html += '<div class="reactivity-row"><span class="label">Light ratio</span><span class="value">' + ll.ratio.toFixed(3) + ' (~' + ll.pupilMm.toFixed(1) + ' mm)</span></div>';
+            html += '<div class="reactivity-row"><span class="label">Constriction</span><span class="value">' + leftPct.toFixed(0) + '% (~' + Math.abs(leftConstrMm).toFixed(1) + ' mm)</span></div>';
+            html += '<div class="reactivity-row"><span class="label">Reactivity</span><span class="value" style="color:' + leftLabel.color + '">' + leftLabel.text + '</span></div>';
+
+            // Right eye reactivity
+            html += '<div style="margin:12px 0 10px 0"><strong style="color:var(--primary-light)">Right Eye (OD)</strong></div>';
+            html += '<div class="reactivity-row"><span class="label">Dark ratio</span><span class="value">' + right.ratio.toFixed(3) + ' (~' + right.pupilMm.toFixed(1) + ' mm)</span></div>';
+            html += '<div class="reactivity-row"><span class="label">Light ratio</span><span class="value">' + rl.ratio.toFixed(3) + ' (~' + rl.pupilMm.toFixed(1) + ' mm)</span></div>';
+            html += '<div class="reactivity-row"><span class="label">Constriction</span><span class="value">' + rightPct.toFixed(0) + '% (~' + Math.abs(rightConstrMm).toFixed(1) + ' mm)</span></div>';
+            html += '<div class="reactivity-row"><span class="label">Reactivity</span><span class="value" style="color:' + rightLabel.color + '">' + rightLabel.text + '</span></div>';
+
+            // RAPD screening (relative afferent pupillary defect)
+            const constrDiff = Math.abs(leftPct - rightPct);
+            if (constrDiff > 10) {
+                const lessReactive = leftPct < rightPct ? 'Left (OS)' : 'Right (OD)';
+                html += '<div style="margin-top:12px;padding:8px;background:rgba(233,69,96,0.15);border-radius:8px;font-size:12px">';
+                html += '<strong style="color:var(--danger)">Asymmetric Reactivity</strong><br>';
+                html += lessReactive + ' shows less constriction (' + constrDiff.toFixed(0) + '% difference). ';
+                html += 'Consider swinging flashlight test to evaluate for relative afferent pupillary defect (RAPD).';
+                html += '</div>';
+            }
+
+            document.getElementById('reactivityData').innerHTML = html;
+
+            // Add reactivity notes to clinical notes
+            notes.push('<strong>Reactivity test results:</strong>');
+            notes.push('Left eye constriction: ' + leftPct.toFixed(0) + '% — <strong style="color:' + leftLabel.color + '">' + leftLabel.text + '</strong>');
+            notes.push('Right eye constriction: ' + rightPct.toFixed(0) + '% — <strong style="color:' + rightLabel.color + '">' + rightLabel.text + '</strong>');
+
+            if (leftLabel.text === 'Fixed / Non-reactive' || rightLabel.text === 'Fixed / Non-reactive') {
+                notes.push('<strong style="color:var(--danger)">ALERT:</strong> Fixed pupil detected. Consider CN III palsy, pharmacological mydriasis, or brainstem pathology.');
+            }
+            if (constrDiff > 10) {
+                const lessReactive = leftPct < rightPct ? 'Left (OS)' : 'Right (OD)';
+                notes.push('<strong style="color:var(--warning)">RAPD screening:</strong> ' + lessReactive + ' less reactive by ' + constrDiff.toFixed(0) + '%. Perform swinging flashlight test.');
+            }
+        } else {
+            reactivitySection.style.display = 'none';
+        }
+    } else {
+        reactivitySection.style.display = 'none';
     }
 
     // Focus distance consistency check
